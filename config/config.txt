@@ -1,0 +1,106 @@
+[gri]
+rate_fps=19
+ros_name=irat_blue_controller_scott
+live=1
+log_filename=log
+camera_name=overhead
+tracking_name=overhead
+robot_name=irat_blue
+debug=0
+ros_master_uri=http://192.168.1.2:11311
+ros_ip=192.168.1.45
+ros_hostname=192.168.1.45
+reset_ratslam=20000
+                                                              	
+[tracking]
+debug=0
+log_tracking=tracking_log.csv
+robot_min_pix=300
+robot_max_pix=800
+robot_search_size=25
+
+robot_y_upper=255
+robot_y_lower=200
+robot_u_upper=255
+robot_u_lower=0
+robot_v_upper=255
+robot_v_lower=0
+robot_erode=0
+robot_dilate=1
+
+marker_min_pix=10
+marker_max_pix=120
+marker_erode=1
+marker_dilate=1
+
+red_y_upper=229
+red_y_lower=100
+red_u_upper=119
+red_u_lower=82
+red_v_upper=255
+red_v_lower=201
+
+
+draw_robot_size=30
+draw_marker_size=5
+
+[wall_following]
+front_collision_threshold=0.2
+side_collision_threshold=0.05
+c_p=300
+c_i=0
+c_d=0
+w_p=100
+w_i=0
+w_d=0
+wall_following_distance=0.3
+centre_following_threshold=0.4
+wall_following_velocity=0.1
+wall_following_rads=0.5
+mode=goal
+debug=1
+
+[ratslam]
+#log_vt = vt_log.csv
+#log_views = view_log.csv
+pc_dim_xy = 15
+exp_delta_pc_threshold = 2
+vt_shift_match = 0
+image_width = 416
+posecell_vtrans_scaling = 12
+vt_step_match = 0
+vt_match_threshold = 0.02
+image_height = 240
+pc_vt_inject_energy = 0.10
+vt_active_decay = 1.0
+template_x_size=40
+template_y_size=20
+exp_loops=5
+log=ratslam
+patch_normalise=2
+
+[manual_control]
+max_trans_vel_ms = 0.1
+max_rot_vel_rads = 1.0
+
+[draw]
+enable=1
+width=780
+height=460
+phone_width=320
+phone_height=480
+background=
+media_path=/home/scott/ros/irat/ratslam/src/media
+final_image=final_image.png
+
+[dock]
+battery_threshold=7.0
+inner_width=15.0
+outer_width=75.0
+camera_parameter_file=/home/scott/ros/irat/ratslam/src/media/Data/camera_para.dat
+inner_pattern_file=/home/scott/ros/irat/ratslam/src/media/Data/inner_cheese
+outer_pattern_file=/home/scott/ros/irat/ratslam/src/media/Data/outer_hole
+
+[lingodroids]
+name=lingodroid0
+connect_to=lingodroid1

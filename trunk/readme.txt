@@ -15,14 +15,6 @@ This program has been tested on Windows 7 and Ubuntu.
 
 The program depends on other work including Boost, OpenCV, irrlicht, ffmpeg, and our custom gri library.
 
-**Ground Truth Tracking**
-The program has the capability of ground truth tracking of the robot from an overhead camera. This capability can be set by defining GROUND_TRUTH_TRACKING.
-This work depends on cvBlobs and OpenCV.
-
-**Future**
-Major features to be added:
-* Goal Memory
-
 **RatSLAM**
 The RatSLAM algorithm is by Dr Michael Milford and Prof Gordon Wyeth ([michael.milford, gordon.wyeth]@qut.edu.au)
 

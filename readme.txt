@@ -6,7 +6,7 @@ This program is free software distributed under the terms of the GNU GPL. See li
 **About**
 
 **Citing the work**
-Publication to come
+D. Ball, S. Heath, M. Milford, G. Wyeth, and J. Wiles, "A Navigating Rat Animat," in Artificial Life, 2010
 
 **Using**
 All parameters should be settable in the config.txt file.

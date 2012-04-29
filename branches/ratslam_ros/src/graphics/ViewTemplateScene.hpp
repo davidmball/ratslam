@@ -1,19 +1,39 @@
 /*
- * PoseCellScene.hpp
+ * openRatSLAM
  *
- *  Created on: 08/06/2011
- *      Author: scott
+ * utils - General purpose utility helper functions mainly for angles and readings settings
+ *
+ * Copyright (C) 2012
+ * David Ball (david.ball@qut.edu.au) (1), Scott Heath (scott.heath@uqconnect.edu.au) (2)
+ *
+ * RatSLAM algorithm by:
+ * Michael Milford (1) and Gordon Wyeth (1) ([michael.milford, gordon.wyeth]@qut.edu.au)
+ *
+ * 1. Queensland University of Technology, Australia
+ * 2. The University of Queensland, Australia
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #ifndef VIEW_TEMPLATE_SCENE_HPP_
 #define VIEW_TEMPLATE_SCENE_HPP_
 
 #include <irrlicht/irrlicht.h>
+#include <GL/gl.h>
+#include <GL/glext.h>
 
-#include <gri_util.h>
-
-#include <Visual_Template_Match.h>
-#include <ImagesScene.hpp>
+#include "../utils/utils.h"
+#include "../ratslam/Visual_Template_Match.h"
 
 namespace ratslam
 {
@@ -21,67 +41,102 @@ namespace ratslam
 class ViewTemplateScene
 {
 public:
-	ViewTemplateScene(irr::scene::ISceneManager * scene, ptree & settings, Visual_Template_Match *in_vt)
-	{
-		update_ptr(in_vt);
-		view_template_scene = scene->createNewSceneManager(false);
+  ViewTemplateScene(ptree & settings, Visual_Template_Match *in_vt)
+  {
 
-		images_scene = new ImagesScene(scene, settings);
-	}
+// TODO add these window location features
+// TODO add support for runtime user window resizing
+//    get_setting_from_ptree(exp_map_x, settings, "vt_window_x", 100);
+//    get_setting_from_ptree(exp_map_y, settings, "vt_window_y", 100);
+    get_setting_from_ptree(vt_window_width, settings, "vt_window_width", 500);
 
-	~ViewTemplateScene()
-	{
+    update_ptr(in_vt);
 
-	}
+    // the camera image is in the top half and the two template windows in the bottom half
+    vt_window_height = vtm->IMAGE_HEIGHT * ((double)vt_window_width/vtm->IMAGE_WIDTH) * 2;
 
-	void update_viewport(int x, int y, int width, int height)
-	{
-		viewport_x = x;
-		viewport_y = y;
-		viewport_width = width;
-		viewport_height = height;
+    device = irr::createDevice(irr::video::EDT_OPENGL, irr::core::dimension2d<irr::u32>(vt_window_width, vt_window_height), 32, false,
+                               false, false);
+    device->setWindowCaption(L"openRatSLAM View Template");
 
-	}
+    driver = device->getVideoDriver();
+    scene = device->getSceneManager();
 
 
-	void set_viewport()
-	{
-		view_template_scene->getVideoDriver()->setViewPort(irr::core::rect<irr::s32>((irr::s32) viewport_x, (irr::s32) viewport_y, (irr::s32) (viewport_x+viewport_width), (irr::s32) (viewport_y+viewport_height)));
-	}
+    view_template_scene = scene->createNewSceneManager(false);
 
-	void update_scene()
-	{
-		images_scene->update_image(vtm->view_rgb, "robot_camera", false, 0, 0, vtm->IMAGE_WIDTH, vtm->IMAGE_HEIGHT, 1.0);
-#ifdef SUPER_EXPERIENCES
-		images_scene->update_image((const double*) &vtm->templates[vtm->current_vt].column_sum[0], "template", true, 0, 400, vtm->templates[vtm->current_vt].column_sum.size()/vtm->TEMPLATE_Y_SIZE, vtm->TEMPLATE_Y_SIZE, (float) (416.0/(double) vtm->TEMPLATE_X_SIZE), (float) (240.0/(double) vtm->TEMPLATE_Y_SIZE));
-#else
-		images_scene->update_image((const double*) &vtm->templates[vtm->current_vt].column_sum[0], "template", true, 0, 400, vtm->TEMPLATE_X_SIZE, vtm->TEMPLATE_Y_SIZE, (float) (416.0/(double) vtm->TEMPLATE_X_SIZE), (float) (240.0/(double) vtm->TEMPLATE_Y_SIZE));
-#endif
-		images_scene->update_image((const double*) &vtm->current_view[0], "view", true, 0, 240, vtm->TEMPLATE_X_SIZE, vtm->TEMPLATE_Y_SIZE, (float) (416.0/(double) vtm->TEMPLATE_X_SIZE), (float) (240.0/(double) vtm->TEMPLATE_Y_SIZE));
-	}
+  }
 
-	void draw_all()
-	{
-		images_scene->camera_for_normal();
-		images_scene->draw_all();
-		view_template_scene->drawAll();
-	}
+  ~ViewTemplateScene()
+  {
 
-	void update_ptr(Visual_Template_Match *vt_in)
-	{ 
-		vtm = vt_in;
-	}
+  }
 
+  void draw_all()
+  {
+    device->run(); // TODO return the bool for quiting
+    driver->beginScene(true, true, irr::video::SColor(255, 0, 0, 0));
+    // TODO not always true for greyscale
+    draw_image(vtm->view_rgb, vtm->greyscale, -1.0f, 1.0f, vtm->IMAGE_WIDTH, vtm->IMAGE_HEIGHT, (double)vt_window_width/vtm->IMAGE_WIDTH, -(double)vt_window_width/vtm->IMAGE_WIDTH);
+
+    draw_image((const double*)&vtm->templates[vtm->current_vt].data[0], true, 0.0, 0.0,
+                               vtm->TEMPLATE_X_SIZE, vtm->TEMPLATE_Y_SIZE,
+                               -(double)vt_window_width/vtm->TEMPLATE_X_SIZE/2,
+                               -(double)vt_window_height/vtm->TEMPLATE_Y_SIZE/4);
+
+    draw_image((const double*)&vtm->current_view[0],true, 0.0, -0.5,
+               vtm->TEMPLATE_X_SIZE, vtm->TEMPLATE_Y_SIZE,
+               -(double)vt_window_width/vtm->TEMPLATE_X_SIZE/2,
+               -(double)vt_window_height/vtm->TEMPLATE_Y_SIZE/4);
+    view_template_scene->drawAll();
+    driver->endScene();
+  }
+
+  void update_ptr(Visual_Template_Match *vt_in)
+  {
+    vtm = vt_in;
+  }
 
 private:
 
-	Visual_Template_Match *vtm;
-	irr::scene::ISceneManager * view_template_scene;
-	ImagesScene * images_scene;
+  void draw_image(const double * image, bool greyscale, float x, float y, int width, int height, double scale_x, double scale_y)
+   {
+    unsigned char* texture_ptr_start = (unsigned char *) malloc(width*height);
 
-	double viewport_x, viewport_y, viewport_width, viewport_height;
+    const double * image_ptr = image;
+    const double * image_end = image_ptr + width * height * (greyscale ? 1 : 3);
+    unsigned char *texture_ptr = texture_ptr_start;
+    for (; image_ptr < image_end;)
+    {
+      *(texture_ptr++) = (unsigned char)(*(image_ptr++) * 255.0);
+    }
+
+    draw_image(texture_ptr_start, greyscale, x, y, width, height, scale_x, scale_y);
+    free(texture_ptr_start);
+   }
+
+   void draw_image(const unsigned char * image, bool greyscale, float x, float y, int width, int height, double scale_x, double scale_y)
+   {
+     glRasterPos2f(x,y);
+     glPixelZoom(scale_x, scale_y);
+     if (greyscale)
+       glDrawPixels(width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE, image);
+     else
+       glDrawPixels(width, height, GL_BGR, GL_UNSIGNED_BYTE, image);
+   }
+
+
+  irr::IrrlichtDevice *device;
+  irr::video::IVideoDriver * driver;
+  irr::scene::ISceneManager * scene;
+  Visual_Template_Match *vtm;
+  irr::scene::ISceneManager * view_template_scene;
+
+  int vt_window_width, vt_window_height;
 };
 
-}; // namespace ratslam
+}
+;
+// namespace ratslam
 
 #endif /* VIEW_TEMPLATE_SCENE_HPP_ */

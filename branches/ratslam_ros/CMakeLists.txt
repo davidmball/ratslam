@@ -1,28 +1,45 @@
-cmake_minimum_required(VERSION 2.8)
-
-project(ratslam)
+cmake_minimum_required(VERSION 2.4.6)
+include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
-find_package(Boost COMPONENTS serialization REQUIRED)
-find_package(OpenCV REQUIRED)
+# Set the build type.  Options are:
+#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
+#  Debug          : w/ debug symbols, w/o optimization
+#  Release        : w/o debug symbols, w/ optimization
+#  RelWithDebInfo : w/ debug symbols, w/ optimization
+#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
+set(ROS_BUILD_TYPE RelWithDebInfo)
+
+rosbuild_init()
+
 find_package(Irrlicht REQUIRED)
+find_package(OpenGL REQUIRED)
 
-file(GLOB RATSLAM_INCLUDES src/ratslam/*.h src/ratslam/*.hpp)
-file(GLOB RATSLAM_GRAPHICS_INCLUDES src/graphics/*.h src/graphics/*.hpp)
-file(GLOB GRI_INCLUDES src/gri/*.h src/gri/*.hpp)
-file(COPY ${RATSLAM_INCLUDES};${RATSLAM_GRAPHICS_INCLUDES};${GRI_INCLUDES} DESTINATION include)
+#set the default path for built executables to the "bin" directory
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+#set the default path for built libraries to the "lib" directory
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-include_directories("${IRRLICHT_INCLUDE_DIR}" "${Boost_INCLUDE_DIRS}" "${CMAKE_BINARY_DIR}/include")
-link_directories("${IRRLICHT_LIBRARY}" "${Boost_LIBRARY_DIRS}")
-add_definitions(-DRATSLAM_EXPORTS -DRATSLAM_GRAPHICS_EXPORTS)
-add_library(ratslam SHARED src/ratslam/Experience_Map.cpp src/ratslam/Pose_Cell_Network.cpp src/ratslam/Visual_Template_Match.cpp src/ratslam/Ratslam.cpp)
-target_link_libraries(ratslam ${Boost_DATE_TIME_LIBRARY})
-add_library(ratslam_graphics SHARED src/graphics/RatslamGraphics.cpp)
-target_link_libraries(ratslam_graphics Irrlicht ${OpenCV_LIBS})
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include)
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+#uncomment if you have defined messages
+rosbuild_genmsg()
+#uncomment if you have defined services
+#rosbuild_gensrv()
 
-message(STATUS "headers include ${RATSLAM_INCLUDES};${RATSLAM_GRAPHICS_INCLUDES}")
-set(RATSLAM_LIBS ratslam ratslam_graphics)
-add_subdirectory(examples)
+#common commands for building c++ executables and libraries
+rosbuild_add_library(ratslam src/ratslam/Experience_Map.cpp src/ratslam/Pose_Cell_Network.cpp src/ratslam/Visual_Template_Match.cpp)
+
+rosbuild_add_boost_directories()
+
+add_definitions("-DHAVE_IRRLICHT")
+
+rosbuild_add_executable(ratslam_vt src/main_vt.cpp)
+target_link_libraries(ratslam_vt ratslam Irrlicht GL)
+rosbuild_link_boost(ratslam_vt serialization)
+
+rosbuild_add_executable(ratslam_pc src/main_pc.cpp)
+target_link_libraries(ratslam_pc ratslam Irrlicht GL)
+rosbuild_link_boost(ratslam_pc serialization)
+
+rosbuild_add_executable(ratslam_em src/main_em.cpp)
+target_link_libraries(ratslam_em ratslam Irrlicht GL)
+rosbuild_link_boost(ratslam_em serialization)

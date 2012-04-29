@@ -1,11 +1,16 @@
 /*
- * This file is part of the RatSLAM C/C++/MATLAB lite versions.
+ * openRatSLAM
  *
- * This version copyright (C) 2011
- * David Ball (d.ball@itee.uq.edu.au), Scott Heath (scott.heath@uqconnect.edu.au)
+ * utils - General purpose utility helper functions mainly for angles and readings settings
+ *
+ * Copyright (C) 2012
+ * David Ball (david.ball@qut.edu.au) (1), Scott Heath (scott.heath@uqconnect.edu.au) (2)
  *
  * RatSLAM algorithm by:
- * Michael Milford and Gordon Wyeth ([michael.milford, gordon.wyeth]@qut.edu.au)
+ * Michael Milford (1) and Gordon Wyeth (1) ([michael.milford, gordon.wyeth]@qut.edu.au)
+ *
+ * 1. Queensland University of Technology, Australia
+ * 2. The University of Queensland, Australia
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +25,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 /*
  * The Visual_Template_Match class is responsible for looking up images
  * and finding the best matching image and a score for how well the image
@@ -29,9 +33,6 @@
 
 #ifndef _VISUAL_TEMPLATE_MATCH_H_
 #define _VISUAL_TEMPLATE_MATCH_H_
-
-#pragma warning( disable: 4275 ) // problem between std::vector and log4cxx
-#pragma warning( disable: 4251 ) // problem between std::vector and log4cxx
 
 #include <cstring>
 #include <stdlib.h>
@@ -44,7 +45,7 @@
 #define _USE_MATH_DEFINES
 #include "math.h"
 
-// todo: replace this with iostream
+// todo: replace this with iostream. update - replace all this with the ros stream macros
 #include <stdio.h>
 
 #include <boost/property_tree/ini_parser.hpp>
@@ -55,33 +56,23 @@ using boost::property_tree::ptree;
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/vector.hpp>
 
-//#define SUPER_EXPERIENCES
-
 namespace ratslam
 {
 	
-
+// TODO as this is now an id and data consider replacing with a vector
 typedef struct td_visual_template
 {
 	unsigned int id;
-	double x_pc, y_pc, th_pc;
-	std::vector<double> column_sum;
-	double decay;
-	std::vector<int> exps;
+	std::vector<double> data;
 
 	template <typename Archive>
 	void serialize(Archive& ar, const unsigned int version)
 	{
 	ar & id;
-	ar & x_pc & y_pc & th_pc;
-	ar & column_sum;
-	ar & decay;
-	ar & exps;
+	ar & data;
 	}
 
 } Visual_Template;
-
-class ExperienceMapScene;
 
 
 class Visual_Template_Match
@@ -93,61 +84,39 @@ public:
 	
 	~Visual_Template_Match();
 
-	// compares raw values not view templates
-	double compare_views(double *vt1, double *vt2, int size);
-
 	// create and add a visual template to the collection
-	int create_template(double x_pc, double y_pc, double th_pc);
+	int create_template();
 	
 	// compare a visual template to all the stored templates, allowing for 
 	// slen pixel shifts in each direction
 	// returns the matching template and the MSE
 	void compare(double &vt_err, unsigned int &vt_match_id);
 
-	double compare_two(int vt_id1, int vt_id2);
-	
-	void do_log(int frame, double *column_sum, int IMAGE_WIDTH);
+	void on_image(const unsigned char * view_rgb, bool greyscale);
 
 	int get_number_of() { return templates.size(); }
 
-    int get_vt_shift_match() const { return VT_SHIFT_MATCH; }
-    int get_vt_step_match() const { return VT_STEP_MATCH; }
 
-    double get_vt_active_delay() const { return VT_ACTIVE_DECAY; }
     double get_vt_match_threshold() const { return VT_MATCH_THRESHOLD; }
 
-	double get_decay(int id) { return templates[id].decay; }
-
 	int get_current_vt() { return current_vt; }
-	void set_current_vt(int id) { 
-		if (current_vt != id)
-		{
-			prev_vt = current_vt;
-			templates[id].decay = VT_ACTIVE_DECAY;	
-		} else
-			templates[id].decay += VT_ACTIVE_DECAY;
 
-		current_vt = id; 
-	} 
+        void set_current_vt(int id) {
+                if (current_vt != id)
+                   prev_vt = current_vt;
 
-	unsigned int get_current_exp_size() { return templates[current_vt].exps.size(); }
-	unsigned int get_current_exp_link(int id) { return templates[current_vt].exps[id]; }
-	void add_exp_to_current(unsigned int id) { templates[current_vt].exps.push_back(id); }
+                current_vt = id;
+        }
 
-	double get_current_x_pc() { return templates[current_vt].x_pc; }
-	double get_current_y_pc() { return templates[current_vt].y_pc; }
-	double get_current_z_pc() { return templates[current_vt].th_pc; }
 
-	void set_view_rgb(const unsigned char * view_rgb) { this->view_rgb = view_rgb; }
 //	const unsigned char * get_view_rgb() {	return view_rgb; }
-	void convert_view_to_view_template();
+	void convert_view_to_view_template(bool grayscale = false);
 
 	template <typename Archive>
 	void serialize(Archive& ar, const unsigned int version)
 	{
 	ar & VT_SHIFT_MATCH;
 	ar & VT_STEP_MATCH;
-	ar & VT_ACTIVE_DECAY;
 	ar & VT_MATCH_THRESHOLD;
 	ar & TEMPLATE_SIZE;
 	ar & IMAGE_WIDTH;
@@ -168,9 +137,9 @@ public:
 	ar & vt_error;
 	ar & prev_vt;
 
-//	ar & log_vt;
-//	ar & log_views;
 	}
+
+
 
 private:
     friend class boost::serialization::access;
@@ -180,7 +149,7 @@ private:
 
 	int VT_SHIFT_MATCH;
 	int VT_STEP_MATCH;
-	double VT_ACTIVE_DECAY;
+
 	double VT_MATCH_THRESHOLD;
 	int TEMPLATE_SIZE;
 	int IMAGE_WIDTH;
@@ -203,14 +172,8 @@ private:
 	int prev_vt;
 
 	const unsigned char *view_rgb;
+	bool greyscale;
 
-
-
-	// unsupported for the moment until fix for serialisation
-	// although prob don't need either
-	// log vt stuff can go into the ratslam log and log views can be its own program
-//	std::ofstream log_vt;
-//	std::ofstream log_views;
 };
 }
 

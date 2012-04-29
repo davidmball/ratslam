@@ -1,8 +1,16 @@
 /*
- * This file is part of the Generic Robot Interface (GRI).
+ * openRatSLAM
  *
- * Copyright (C) 2011
- * David Ball (d.ball@itee.uq.edu.au), Scott Heath (scott.heath@uqconnect.edu.au)
+ * utils - General purpose utility helper functions mainly for angles and readings settings
+ *
+ * Copyright (C) 2012
+ * David Ball (david.ball@qut.edu.au) (1), Scott Heath (scott.heath@uqconnect.edu.au) (2)
+ *
+ * RatSLAM algorithm by:
+ * Michael Milford (1) and Gordon Wyeth (1) ([michael.milford, gordon.wyeth]@qut.edu.au)
+ *
+ * 1. Queensland University of Technology, Australia
+ * 2. The University of Queensland, Australia
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,30 +26,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _GRI_UTIL_H
-#define _GRI_UTIL_H
+#ifndef _RATSLAM_UTILS_H
+#define _RATSLAM_UTILS_H
 
 #include <boost/property_tree/ptree.hpp>
 using boost::property_tree::ptree;
 
 #define _USE_MATH_DEFINES
-#include "math.h"
+#include <math.h>
 
-#include <profiler.hpp>
-
-
-namespace gri {
+#include <iostream>
+#include <float.h>
 
 
-
-	typedef class boost::prof::basic_profiler
-<
-boost::prof::empty_logging_policy, // don't log events
-boost::prof::default_stats_policy,
-boost::high_resolution_timer
->
-profiler;
-
+namespace ratslam {
 
 template<typename T>
 inline void get_setting_from_ptree(T & var, boost::property_tree::ptree & settings, std::string name, T default_value)
@@ -66,8 +64,8 @@ inline bool get_setting_child(boost::property_tree::ptree & child, boost::proper
 	catch(boost::property_tree::ptree_bad_path pbp)
 	{
 		std::cout << "SETTINGS(error): " << name << " child not found." << std::endl;
-		if (pause_on_error)
-			std::cin.get();
+//		if (pause_on_error)
+//			std::cin.get();
 		return false;
 	}
 	return true;
@@ -104,7 +102,7 @@ inline double get_signed_delta_rad(double angle1, double angle2)
     double dir = clip_rad_180(angle2 - angle1);
 
     double delta_angle = clip_rad_360(angle1) - clip_rad_360(angle2);
-	delta_angle = abs(delta_angle);
+	delta_angle = fabs(delta_angle);
 
     if (delta_angle < 2.0 * M_PI - delta_angle)
     {
@@ -122,6 +120,6 @@ inline double get_signed_delta_rad(double angle1, double angle2)
     }
 }
 
-}; // namspace gri
+}; // namspace ratslam
 
-#endif // _GRI_UTIL_H
+#endif // _RATSLAM_UTILS_H

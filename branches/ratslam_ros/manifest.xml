@@ -11,12 +11,8 @@
   <depend package="std_msgs"/>
   <depend package="roscpp"/>
   <depend package="sensor_msgs"/>
-  <depend package="irat_msgs"/>
-  <depend package="irat_utils"/>
-  <depend package="tf" />
-  <depend package="actionlib" />
-  <depend package="move_base_msgs" />
-  <depend package="tracking" />
-  <depend package="gri" />
+  <depend package="nav_msgs"/>
+  <depend package="opencv2"/>
+  <depend package="topological_nav_msgs"/>
 </package>
 

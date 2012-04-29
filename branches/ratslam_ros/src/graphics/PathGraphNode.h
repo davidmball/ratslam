@@ -1,11 +1,16 @@
 /*
- * This file is part of the RatSLAM C/C++/MATLAB lite versions.
+ * openRatSLAM
  *
- * This version copyright (C) 2011
- * David Ball (d.ball@itee.uq.edu.au), Scott Heath (scott.heath@uqconnect.edu.au)
+ * utils - General purpose utility helper functions mainly for angles and readings settings
+ *
+ * Copyright (C) 2012
+ * David Ball (david.ball@qut.edu.au) (1), Scott Heath (scott.heath@uqconnect.edu.au) (2)
  *
  * RatSLAM algorithm by:
- * Michael Milford and Gordon Wyeth ([michael.milford, gordon.wyeth]@qut.edu.au)
+ * Michael Milford (1) and Gordon Wyeth (1) ([michael.milford, gordon.wyeth]@qut.edu.au)
+ *
+ * 1. Queensland University of Technology, Australia
+ * 2. The University of Queensland, Australia
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,6 +90,7 @@ public:
 			break;
 		default:
 			primitive_count = indices.size() / 3;
+			break;
 		}
 
 		driver->drawVertexPrimitiveList((void*)&vertices[0], vertices.size(),

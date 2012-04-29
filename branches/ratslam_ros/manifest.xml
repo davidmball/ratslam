@@ -1,0 +1,22 @@
+<package>
+  <description brief="ratslam">
+
+     ratslam
+
+  </description>
+  <author>scott</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/ratslam</url>
+  <depend package="std_msgs"/>
+  <depend package="roscpp"/>
+  <depend package="sensor_msgs"/>
+  <depend package="irat_msgs"/>
+  <depend package="irat_utils"/>
+  <depend package="tf" />
+  <depend package="actionlib" />
+  <depend package="move_base_msgs" />
+  <depend package="tracking" />
+  <depend package="gri" />
+</package>
+

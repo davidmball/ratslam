@@ -1,1 +1,50 @@
 #labels RatSLAM,ROS
+The ROS version of RatSLAM is intended for publication in **. It has been designed as a more modular version consisting of 3 individual nodes.
+
+This version of ROS was based on the RatSLAM C++ library written by David Ball and Scott Heath, with 
+
+For a full description of ROS terminology have a look [http://www.ros.org here]. 
+
+The ROS version of RatSLAM has only been tested on Ubuntu and as ROS support for platforms other than Linux is still limited, this will probably not change.
+
+==Dependencies==
+
+The ROS version of RatSLAM depends on ROS dependencies:
+opencv2 and topological_nav_msgs
+and also on [http://irrlicht.sourceforge.net Irrlicht]
+
+==Build Instructions==
+
+Checkout the source from svn:
+
+{{{
+svn checkout http://ratslam.googlecode.com/svn/branches/ratslam_ros ratslam_ros
+}}}
+
+Setup ROS environment variables by typing something like:
+{{{
+. /opt/ros/diamondback/setup.sh
+}}}
+
+Make sure ratslam_ros is in a directory on the environment variable ROS_PACKAGE_PATH
+
+Then build ratslam_ros with
+{{{
+rosmake
+}}}
+
+==Running RatSLAM==
+
+To use one of our pre-packaged bag files, download the bag file for either:
+ * [http://www.qut.com/guibot Guibot dataset]
+ * [http://www.qut.com/irat iRat dataset]
+ * [http://www.qut.com/stlucia St Lucia dataset]
+
+and place the dataset in the ratslam_ros directory.
+
+Run the dataset and RatSLAM by typing 
+{{{
+roslaunch launch_<dataset>.launch
+}}}
+
+where <dataset> is either guibot, stlucia or irataus.

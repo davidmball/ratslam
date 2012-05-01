@@ -12,6 +12,10 @@ The ROS version of RatSLAM has only been tested on Ubuntu and as ROS support for
 The ROS version of RatSLAM depends on ROS dependencies:
 opencv2 and topological_nav_msgs
 and also on [http://irrlicht.sourceforge.net Irrlicht]
+Irrlicht may be installed on Ubuntu with apt-get
+{{{
+sudo apt-get install libirrlicht-dev
+}}}
 
 ==Build Instructions==
 
@@ -36,7 +40,6 @@ rosmake
 ==Running RatSLAM==
 
 To use one of our pre-packaged bag files, download the bag file for either:
- * [http://www.qut.com/guibot Guibot dataset]
  * [http://www.qut.com/irat iRat dataset]
  * [http://www.qut.com/stlucia St Lucia dataset]
 
@@ -47,4 +50,4 @@ Run the dataset and RatSLAM by typing
 roslaunch launch_<dataset>.launch
 }}}
 
-where <dataset> is either guibot, stlucia or irataus.
+where <dataset> is either stlucia or irataus.

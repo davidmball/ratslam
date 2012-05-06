@@ -1,0 +1,20 @@
+
+<launch>
+
+	<machine name="local_alt" address="localhost" default="true" />
+	
+	<node name="RatSLAMVisualTemplates" pkg="ratslam_ros" type="ratslam_vt" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMPoseCells" pkg="ratslam_ros" type="ratslam_pc" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMExperienceMap" pkg="ratslam_ros" type="ratslam_em" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
+	
+	<node pkg="rxtools" type="rxplot" name="plot_vt_em" args="-b -1 -p 500 -r 1 -m . /stlucia/ViewTemplate/Template/current_id,/stlucia/PoseCell/TopologicalAction/dest_id" />
+	<node pkg="rosbag" type="record" name="record" args="/stlucia/ExperienceMap/Map /stlucia/ExperienceMap/RobotPose /stlucia/ViewTemplate/Template /stlucia/PoseCell/TopologicalAction -O /home/ball7/data/stlucia/ratslam_out.bag" />
+
+
+
+	
+	<!-- node pkg="rosbag" type="play" name="play" args="/home/ball7/data/stlucia/stlucia.bag /odom:=/asfsa"/ --> 
+
+
+</launch>

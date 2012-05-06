@@ -8,7 +8,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 #  Release        : w/o debug symbols, w/ optimization
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-set(ROS_BUILD_TYPE RelWithDebInfo)
+set(ROS_BUILD_TYPE Release)
+#set(ROS_BUILD_TYPE Debug)
 
 rosbuild_init()
 
@@ -26,14 +27,15 @@ rosbuild_genmsg()
 #rosbuild_gensrv()
 
 #common commands for building c++ executables and libraries
-rosbuild_add_library(ratslam src/ratslam/Experience_Map.cpp src/ratslam/Pose_Cell_Network.cpp src/ratslam/Visual_Template_Match.cpp)
+rosbuild_add_library(ratslam src/ratslam/Experience_Map.cpp src/ratslam/Pose_Cell_Network.cpp src/ratslam/Visual_Template_Match.cpp src/ratslam/visual_odometry.cpp)
 
 rosbuild_add_boost_directories()
 
+# uncomment is you don't have irrlicht installed
 add_definitions("-DHAVE_IRRLICHT")
 
 rosbuild_add_executable(ratslam_vt src/main_vt.cpp)
-target_link_libraries(ratslam_vt ratslam Irrlicht GL)
+target_link_libraries(ratslam_vt ratslam Irrlicht GL opencv_core opencv_imgproc opencv_highgui)
 rosbuild_link_boost(ratslam_vt serialization)
 
 rosbuild_add_executable(ratslam_pc src/main_pc.cpp)
@@ -43,3 +45,7 @@ rosbuild_link_boost(ratslam_pc serialization)
 rosbuild_add_executable(ratslam_em src/main_em.cpp)
 target_link_libraries(ratslam_em ratslam Irrlicht GL)
 rosbuild_link_boost(ratslam_em serialization)
+
+rosbuild_add_executable(ratslam_vo src/main_vo.cpp)
+target_link_libraries(ratslam_vo ratslam opencv_core opencv_imgproc opencv_highgui)
+rosbuild_link_boost(ratslam_vo serialization)

@@ -13,6 +13,8 @@
   <depend package="sensor_msgs"/>
   <depend package="nav_msgs"/>
   <depend package="opencv2"/>
-  <depend package="topological_nav_msgs"/>
+  <depend package="tf"/>
+  <depend package="visualization_msgs"/>
+  <depend package="image_transport" />
 </package>
 

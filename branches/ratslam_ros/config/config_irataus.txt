@@ -1,27 +1,22 @@
 [general]
-#topic_root=
+topic_root=irat_red
                                                 	
 [ratslam]
-pc_dim_xy = 31
-exp_delta_pc_threshold = 0.8
-vt_shift_match = 15
-
-#posecell_vtrans_scaling = 12
-posecell_vtrans_scaling = 0.1
-
-vt_step_match = 3
+image_vt_y_range1=150
+template_x_size=200
+template_y_size=20
+vt_shift_match = 4
+vt_step_match = 1
 vt_match_threshold = 0.03
-
-pc_vt_inject_energy = 0.15
 vt_active_decay = 1.0
-template_x_size=560
-template_y_size=1
-exp_loops=5
 
-image_vt_x_range0=55
-image_vt_x_range1=615
-image_vt_y_range0=200
-image_vt_y_range1=280
+pc_dim_xy = 11
+pc_vt_inject_energy = 0.1
+pc_cell_x_size = 0.015
+
+exp_delta_pc_threshold = 2
+exp_loops=20
+exp_initial_em_deg=140
 
 [draw]
 enable=1
@@ -36,4 +31,3 @@ posecells_y=0
 posecells_size=250
 media_path=../src/media
 image_file=irat_sm.tga
-

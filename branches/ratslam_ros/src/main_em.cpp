@@ -26,20 +26,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
-using namespace std;
-
 #include "utils/utils.h"
 
 #include <boost/property_tree/ini_parser.hpp>
 
 #include <ros/ros.h>
 
-// em
 #include "ratslam/Experience_Map.h"
 #include <ratslam_ros/TopologicalAction.h>
 #include <nav_msgs/Odometry.h>
-#include <topological_nav_msgs/TopologicalGraph.h>
+#include "graphics/ExperienceMapScene.hpp"
+#include <ratslam_ros/TopologicalMap.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <tf/transform_broadcaster.h>
+
+#include <visualization_msgs/Marker.h>
+
+ros::Publisher pub_em;
+ros::Publisher pub_pose;
+ros::Publisher pub_em_markers;
+geometry_msgs::PoseStamped pose_output;
+ratslam_ros::TopologicalMap em_map;
+visualization_msgs::Marker em_marker;
 
 #ifdef HAVE_IRRLICHT
 #include "graphics/ExperienceMapScene.hpp"
@@ -49,7 +57,7 @@ bool use_graphics;
 
 using namespace ratslam;
 
-void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::Experience_Map *em, ros::Publisher * pub_em)
+void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::Experience_Map *em)
 {
   ROS_DEBUG_STREAM("EM:odo_callback{" << ros::Time::now() << "} seq=" << odo->header.seq << " v=" << odo->twist.twist.linear.x << " r=" << odo->twist.twist.angular.z);
 
@@ -62,21 +70,11 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::Experience_Map *em, r
   }
 
   prev_time = odo->header.stamp;
-  em->iterate();
-
-#ifdef HAVE_IRRLICHT
-  if (use_graphics)
-  {
-	ems->update_scene();
-	ems->draw_all();
-  }
-#endif
 }
 
-void action_callback(ratslam_ros::TopologicalActionConstPtr action, ratslam::Experience_Map *em, ros::Publisher * pub_em)
+void action_callback(ratslam_ros::TopologicalActionConstPtr action, ratslam::Experience_Map *em)
 {
   ROS_DEBUG_STREAM("EM:action_callback{" << ros::Time::now() << "} action=" << action->action << " src=" << action->src_id << " dst=" << action->dest_id);
-//  cout << "EM:action_callback{" << ros::Time::now() << "} action=" << action->action << " src=" << action->src_id << " dst=" << action->dest_id;
 
   switch (action->action)
   {
@@ -98,6 +96,93 @@ void action_callback(ratslam_ros::TopologicalActionConstPtr action, ratslam::Exp
 
   em->iterate();
 
+  pose_output.header.stamp = ros::Time::now();
+  pose_output.header.seq++;
+  pose_output.pose.position.x = em->get_experience(em->get_current_id())->x_m;
+  pose_output.pose.position.y = em->get_experience(em->get_current_id())->y_m;
+  pose_output.pose.position.z = 0;
+  pose_output.pose.orientation.x = 0;
+  pose_output.pose.orientation.y = 0;
+  pose_output.pose.orientation.z = sin(em->get_experience(em->get_current_id())->th_rad/2.0);
+  pose_output.pose.orientation.w = cos(em->get_experience(em->get_current_id())->th_rad/2.0);
+  pub_pose.publish(pose_output);
+
+  static ros::Time prev_pub_time(0);
+
+  if (action->header.stamp - prev_pub_time > ros::Duration(30.0))
+  {
+    prev_pub_time = action->header.stamp;
+
+    em_map.header.stamp = ros::Time::now();
+    em_map.header.seq++;
+    em_map.node_count = em->get_num_experiences();
+    em_map.node.resize(em->get_num_experiences());
+    for (int i=0; i < em->get_num_experiences(); i++)
+    {
+      em_map.node[i].id = em->get_experience(i)->id;
+      em_map.node[i].pose.position.x = em->get_experience(i)->x_m;
+      em_map.node[i].pose.position.y = em->get_experience(i)->y_m;
+      em_map.node[i].pose.orientation.x = 0;
+      em_map.node[i].pose.orientation.y = 0;
+      em_map.node[i].pose.orientation.z = sin(em->get_experience(i)->th_rad/2.0);
+      em_map.node[i].pose.orientation.w = cos(em->get_experience(i)->th_rad/2.0);
+    }
+
+    em_map.edge_count = em->get_num_links();
+    em_map.edge.resize(em->get_num_links());
+    for (int i=0; i < em->get_num_links(); i++)
+    {
+      em_map.edge[i].source_id = em->get_link(i)->exp_from_id;
+      em_map.edge[i].destination_id = em->get_link(i)->exp_to_id;
+      em_map.edge[i].duration = ros::Duration(em->get_link(i)->delta_time_s);
+      em_map.edge[i].transform.translation.x = em->get_link(i)->d * cos(em->get_link(i)->heading_rad);
+      em_map.edge[i].transform.translation.y = em->get_link(i)->d * sin(em->get_link(i)->heading_rad);
+      em_map.edge[i].transform.rotation.x = 0;
+      em_map.edge[i].transform.rotation.y = 0;
+      em_map.edge[i].transform.rotation.z = sin(em->get_link(i)->facing_rad/2.0);
+      em_map.edge[i].transform.rotation.w = cos(em->get_link(i)->facing_rad/2.0);
+    }
+    pub_em.publish(em_map);
+  }
+
+
+
+  em_marker.header.stamp = ros::Time::now();
+  em_marker.header.seq++;
+  em_marker.header.frame_id = "1";
+  em_marker.type=visualization_msgs::Marker::LINE_LIST;
+  em_marker.points.resize(em->get_num_links() * 2);
+  em_marker.action=visualization_msgs::Marker::ADD;
+  em_marker.scale.x = 0.01;
+  //em_marker.scale.y = 1;
+  //em_marker.scale.z = 1;
+  em_marker.color.a = 1;
+  em_marker.ns = "em";
+  em_marker.id = 0;
+  em_marker.pose.orientation.x = 0;
+  em_marker.pose.orientation.y = 0;
+  em_marker.pose.orientation.z = 0;
+  em_marker.pose.orientation.w = 1;
+  for (int i=0; i < em->get_num_links(); i++)
+
+  {
+    em_marker.points[i*2].x = em->get_experience(em->get_link(i)->exp_from_id)->x_m;
+    em_marker.points[i*2].y = em->get_experience(em->get_link(i)->exp_from_id)->y_m;
+    em_marker.points[i*2].z = 0;
+    em_marker.points[i*2+1].x = em->get_experience(em->get_link(i)->exp_to_id)->x_m;
+    em_marker.points[i*2+1].y = em->get_experience(em->get_link(i)->exp_to_id)->y_m;
+    em_marker.points[i*2+1].z = 0;
+  }
+
+  pub_em_markers.publish(em_marker);
+
+  static tf::TransformBroadcaster br;
+  tf::Transform transform;
+  transform.setOrigin( tf::Vector3(0, 0, 0.0) );
+  transform.setRotation( tf::Quaternion(0, 0, 0) );
+  br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "world2"));
+
+
 #ifdef HAVE_IRRLICHT
   if (use_graphics)
   {
@@ -105,23 +190,24 @@ void action_callback(ratslam_ros::TopologicalActionConstPtr action, ratslam::Exp
 	ems->draw_all();
   }
 #endif
-
-
 }
+
 
 int main(int argc, char * argv[])
 {
   if (argc < 2)
   {
-    std::cout << "USAGE: " << argv[0] << " <config_file>" << std::endl;
-    std::cin.get();
+    ROS_FATAL_STREAM("USAGE: " << argv[0] << " <config_file>");
     exit(-1);
   }
-
-  boost::property_tree::ptree settings, ratslam_settings;
+  std::string topic_root = "";
+  boost::property_tree::ptree settings, general_settings, ratslam_settings;
   read_ini(argv[1], settings);
 
   get_setting_child(ratslam_settings, settings, "ratslam", true);
+  get_setting_child(general_settings, settings, "general", true);
+  get_setting_from_ptree(topic_root, general_settings, "topic_root", (std::string) "");
+
 
   if (!ros::isInitialized())
   {
@@ -129,17 +215,24 @@ int main(int argc, char * argv[])
   }
   ros::NodeHandle node;
 
-  std::string topic_root = "";
 
-  // em main
+
   ratslam::Experience_Map * em = new ratslam::Experience_Map(ratslam_settings);
-  ros::Publisher pub_em = node.advertise<topological_nav_msgs::TopologicalGraph>(topic_root + "/ExperienceMap/Graph", 1);
-  // TODO also publishes robot's pose
 
-  ros::Subscriber sub_odometry2 = node.subscribe<nav_msgs::Odometry>(topic_root + "/odom", 1, boost::bind(odo_callback, _1, em, &pub_em), ros::VoidConstPtr(),
+
+  pub_em = node.advertise<ratslam_ros::TopologicalMap>(topic_root + "/ExperienceMap/Map", 1);
+  pub_em_markers = node.advertise<visualization_msgs::Marker>(topic_root + "/ExperienceMap/MapMarker", 1);
+
+  pub_pose = node.advertise<geometry_msgs::PoseStamped>(topic_root + "/ExperienceMap/RobotPose", 1);
+
+
+  ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>(topic_root + "/odom", 0,
+                                                                     boost::bind(odo_callback, _1, em), ros::VoidConstPtr(),
                                                                      ros::TransportHints().tcpNoDelay());
-  ros::Subscriber sub_action = node.subscribe<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction", 0, boost::bind(action_callback, _1, em, &pub_em),
+  ros::Subscriber sub_action = node.subscribe<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction", 0,
+                                                                              boost::bind(action_callback, _1, em),
                                                                               ros::VoidConstPtr(), ros::TransportHints().tcpNoDelay());
+
 #ifdef HAVE_IRRLICHT
   boost::property_tree::ptree draw_settings;
   get_setting_child(draw_settings, settings, "draw", true);
@@ -150,9 +243,7 @@ int main(int argc, char * argv[])
   }
 #endif
 
-  // TODO somewhere we need a   get_experience_map()->set_kidnapped();
 
-  // TODO: the draw all should go in here, only the updates in teh callback
   ros::spin();
 
   return 0;

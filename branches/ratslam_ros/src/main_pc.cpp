@@ -34,19 +34,17 @@ using namespace std;
 
 #include <ros/ros.h>
 
-// pc
 #include "ratslam/Pose_Cell_Network.h"
 #include <ratslam_ros/TopologicalAction.h>
 #include <nav_msgs/Odometry.h>
+#include <ratslam_ros/ViewTemplate.h>
+
 
 #if HAVE_IRRLICHT
 #include "graphics/PoseCellsScene.hpp"
 ratslam::PoseCellsScene *pcs;
 bool use_graphics;
 #endif
-
-#include <ratslam_ros/ViewTemplate.h>
-
 
 using namespace ratslam;
 
@@ -63,7 +61,6 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::Pose_Cell_Network *pc
     double time_diff = (odo->header.stamp - prev_time).toSec();
 
     pc_output.src_id = pc->get_current_exp_id();
-    //pc->on_odo(0.1, 0.2, 1.0/20.0);
     pc->on_odo(odo->twist.twist.linear.x, odo->twist.twist.angular.z, time_diff);
     pc_output.action = pc->get_action();
     if (pc_output.action != ratslam::Pose_Cell_Network::NO_ACTION)
@@ -74,6 +71,7 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::Pose_Cell_Network *pc
       pub_pc->publish(pc_output);
       ROS_DEBUG_STREAM("PC:action_publish{odo}{" << ros::Time::now() << "} action{" << pc_output.header.seq << "}=" <<  pc_output.action << " src=" << pc_output.src_id << " dest=" << pc_output.dest_id);
     }
+
 
 #ifdef HAVE_IRRLICHT
 	if (use_graphics)
@@ -90,20 +88,7 @@ void template_callback(ratslam_ros::ViewTemplateConstPtr vt, ratslam::Pose_Cell_
 {
   ROS_DEBUG_STREAM("PC:vt_callback{" << ros::Time::now() << "} seq=" << vt->header.seq << " id=" << vt->current_id);
 
-  pc_output.src_id = pc->get_current_exp_id();
   pc->on_view_template(vt->current_id);
-  pc_output.action = pc->get_action();
-
-//  cout << "Action: " << pc_output.action << " src=" << pc_output.src_id << " dst=" << pc_output.dest_id << endl;
-
-  if (pc_output.action != ratslam::Pose_Cell_Network::NO_ACTION)
-  {
-    pc_output.dest_id = pc->get_current_exp_id();
-    pc_output.header.stamp = ros::Time::now();
-    pc_output.header.seq++;
-    pub_pc->publish(pc_output);
-    ROS_DEBUG_STREAM("PC:action_publish{vt}{" << ros::Time::now() << "} action{" << pc_output.header.seq << "}=" <<  pc_output.action << " src=" << pc_output.src_id << " dest=" << pc_output.dest_id);
-  }
 
 #ifdef HAVE_IRRLICHT
 	if (use_graphics)
@@ -119,15 +104,16 @@ int main(int argc, char * argv[])
 {
   if (argc < 2)
   {
-    std::cout << "USAGE: " << argv[0] << " <config_file>" << std::endl;
+    ROS_FATAL_STREAM("USAGE: " << argv[0] << " <config_file>");
     exit(-1);
   }
-
-  boost::property_tree::ptree settings, ratslam_settings;
+  std::string topic_root = "";
+  boost::property_tree::ptree settings, ratslam_settings, general_settings;
   read_ini(argv[1], settings);
 
   get_setting_child(ratslam_settings, settings, "ratslam", true);
- 
+  get_setting_child(general_settings, settings, "general", true);
+  get_setting_from_ptree(topic_root, general_settings, "topic_root", (std::string) "");
 
   if (!ros::isInitialized())
   {
@@ -135,13 +121,12 @@ int main(int argc, char * argv[])
   }
   ros::NodeHandle node;
 
-  std::string topic_root = "";
 
-  // pc main
+
   ratslam::Pose_Cell_Network * pc = new ratslam::Pose_Cell_Network(ratslam_settings);
   ros::Publisher pub_pc = node.advertise<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction", 0);
 
-  ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>(topic_root + "/odom", 1, boost::bind(odo_callback, _1, pc, &pub_pc), ros::VoidConstPtr(),
+  ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>(topic_root + "/odom", 0, boost::bind(odo_callback, _1, pc, &pub_pc), ros::VoidConstPtr(),
                                                                     ros::TransportHints().tcpNoDelay());
   ros::Subscriber sub_template = node.subscribe<ratslam_ros::ViewTemplate>(topic_root + "/ViewTemplate/Template", 0, boost::bind(template_callback, _1, pc, &pub_pc),
                                                                            ros::VoidConstPtr(), ros::TransportHints().tcpNoDelay());
@@ -154,7 +139,7 @@ int main(int argc, char * argv[])
 	pcs = new ratslam::PoseCellsScene(draw_settings, pc);
   }
 #endif
-  // TODO: the draw all should go in here, only the updates in teh callback
+
   ros::spin();
 
   return 0;

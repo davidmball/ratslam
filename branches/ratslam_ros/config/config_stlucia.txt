@@ -1,0 +1,54 @@
+[general]
+topic_root=stlucia
+                                                	
+[ratslam]
+image_vt_x_range0=40
+image_vt_x_range1=600
+image_vt_y_range0=120
+image_vt_y_range1=280
+vt_match_threshold = 0.048
+template_x_size=280
+template_y_size=1
+vt_shift_match = 11
+vt_step_match = 5
+vt_normalisation = 1
+pc_vt_restore=0.04
+
+pc_cell_x_size = 2
+pc_dim_xy = 30
+exp_delta_pc_threshold = 1.0
+pc_vt_inject_energy = 0.10
+vt_active_decay = 1.0
+
+exp_loops=20
+
+
+[visual_odometry]
+vtrans_image_x_min=195
+vtrans_image_x_max=475
+vtrans_image_y_min=270
+vtrans_image_y_max=430
+
+vrot_image_x_min=195
+vrot_image_x_max=475
+vrot_image_y_min=75
+vrot_image_y_max=240
+
+camera_fov_deg=53
+camera_hz = 10
+vtrans_scaling = 1000
+vtrans_max=20
+
+[draw]
+enable=1
+vt_window_x=500
+vt_window_y=500
+vt_window_width=500
+exp_map_x=500
+exp_map_y=500
+exp_map_size=500
+posecells_x=500
+posecells_y=0
+posecells_size=250
+media_path=../src/media
+image_file=irat_sm.tga

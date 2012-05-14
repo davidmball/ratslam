@@ -32,10 +32,10 @@
 
 #include <ros/ros.h>
 
-#include "ratslam/Experience_Map.h"
+#include "ratslam/experience_map.h"
 #include <ratslam_ros/TopologicalAction.h>
 #include <nav_msgs/Odometry.h>
-#include "graphics/ExperienceMapScene.hpp"
+#include "graphics/experience_map_scene.h"
 #include <ratslam_ros/TopologicalMap.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <tf/transform_broadcaster.h>
@@ -50,14 +50,14 @@ ratslam_ros::TopologicalMap em_map;
 visualization_msgs::Marker em_marker;
 
 #ifdef HAVE_IRRLICHT
-#include "graphics/ExperienceMapScene.hpp"
+#include "graphics/experience_map_scene.h"
 ratslam::ExperienceMapScene *ems;
 bool use_graphics;
 #endif
 
 using namespace ratslam;
 
-void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::Experience_Map *em)
+void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::ExperienceMap *em)
 {
   ROS_DEBUG_STREAM("EM:odo_callback{" << ros::Time::now() << "} seq=" << odo->header.seq << " v=" << odo->twist.twist.linear.x << " r=" << odo->twist.twist.angular.z);
 
@@ -72,7 +72,7 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::Experience_Map *em)
   prev_time = odo->header.stamp;
 }
 
-void action_callback(ratslam_ros::TopologicalActionConstPtr action, ratslam::Experience_Map *em)
+void action_callback(ratslam_ros::TopologicalActionConstPtr action, ratslam::ExperienceMap *em)
 {
   ROS_DEBUG_STREAM("EM:action_callback{" << ros::Time::now() << "} action=" << action->action << " src=" << action->src_id << " dst=" << action->dest_id);
 
@@ -98,6 +98,7 @@ void action_callback(ratslam_ros::TopologicalActionConstPtr action, ratslam::Exp
 
   pose_output.header.stamp = ros::Time::now();
   pose_output.header.seq++;
+  pose_output.header.frame_id = "1";
   pose_output.pose.position.x = em->get_experience(em->get_current_id())->x_m;
   pose_output.pose.position.y = em->get_experience(em->get_current_id())->y_m;
   pose_output.pose.position.z = 0;
@@ -195,6 +196,10 @@ void action_callback(ratslam_ros::TopologicalActionConstPtr action, ratslam::Exp
 
 int main(int argc, char * argv[])
 {
+  ROS_INFO_STREAM(argv[0] << " - openRatSLAM Copyright (C) 2012 David Ball and Scott Heath");
+  ROS_INFO_STREAM("RatSLAM algorithm by Michael Milford and Gordon Wyeth");
+  ROS_INFO_STREAM("Distributed under the GNU GPL v3, see the included license file.");
+
   if (argc < 2)
   {
     ROS_FATAL_STREAM("USAGE: " << argv[0] << " <config_file>");
@@ -217,7 +222,7 @@ int main(int argc, char * argv[])
 
 
 
-  ratslam::Experience_Map * em = new ratslam::Experience_Map(ratslam_settings);
+  ratslam::ExperienceMap * em = new ratslam::ExperienceMap(ratslam_settings);
 
 
   pub_em = node.advertise<ratslam_ros::TopologicalMap>(topic_root + "/ExperienceMap/Map", 1);

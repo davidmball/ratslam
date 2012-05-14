@@ -33,31 +33,28 @@
 #include <GL/glext.h>
 
 #include "../utils/utils.h"
-#include "../ratslam/Visual_Template_Match.h"
+#include "../ratslam/local_view_match.h"
 
 namespace ratslam
 {
 
-class ViewTemplateScene
+class LocalViewScene
 {
 public:
-  ViewTemplateScene(ptree & settings, Visual_Template_Match *in_vt)
+  LocalViewScene(ptree & settings, LocalViewMatch *in_vt)
   {
 
-// TODO add these window location features
-// TODO add support for runtime user window resizing
-//    get_setting_from_ptree(exp_map_x, settings, "vt_window_x", 100);
-//    get_setting_from_ptree(exp_map_y, settings, "vt_window_y", 100);
-    get_setting_from_ptree(vt_window_width, settings, "vt_window_width", 500);
+    get_setting_from_ptree(vt_window_width, settings, "vt_window_width", 640);
+    get_setting_from_ptree(vt_window_height, settings, "vt_window_height", 480);
 
     update_ptr(in_vt);
 
     // the camera image is in the top half and the two template windows in the bottom half
-    vt_window_height = vtm->IMAGE_HEIGHT * ((double)vt_window_width/vtm->IMAGE_WIDTH) * 2;
+  //  vt_window_height = vtm->IMAGE_HEIGHT * ((double)vt_window_width/vtm->IMAGE_WIDTH) * 2;
 
     device = irr::createDevice(irr::video::EDT_OPENGL, irr::core::dimension2d<irr::u32>(vt_window_width, vt_window_height), 32, false,
                                false, false);
-    device->setWindowCaption(L"openRatSLAM View Template");
+    device->setWindowCaption(L"openRatSLAM Local View");
 
     driver = device->getVideoDriver();
     scene = device->getSceneManager();
@@ -67,7 +64,7 @@ public:
 
   }
 
-  ~ViewTemplateScene()
+  ~LocalViewScene()
   {
 
   }
@@ -79,20 +76,20 @@ public:
     // TODO not always true for greyscale
     draw_image(vtm->view_rgb, vtm->greyscale, -1.0f, 1.0f, vtm->IMAGE_WIDTH, vtm->IMAGE_HEIGHT, (double)vt_window_width/vtm->IMAGE_WIDTH, -(double)vt_window_width/vtm->IMAGE_WIDTH);
 
-    draw_image((const double*)&vtm->templates[vtm->current_vt].data[0], true, 0.0, 0.0,
+    draw_image((const double*)&vtm->templates[vtm->current_vt].data[0], true, -1, 0.0,
                                vtm->TEMPLATE_X_SIZE, vtm->TEMPLATE_Y_SIZE,
-                               -(double)vt_window_width/vtm->TEMPLATE_X_SIZE/2,
+                               (double)vt_window_width/vtm->TEMPLATE_X_SIZE,
                                -(double)vt_window_height/vtm->TEMPLATE_Y_SIZE/4);
 
-    draw_image((const double*)&vtm->current_view[0],true, 0.0, -0.5,
+    draw_image((const double*)&vtm->current_view[0],true, -1.0, -0.5,
                vtm->TEMPLATE_X_SIZE, vtm->TEMPLATE_Y_SIZE,
-               -(double)vt_window_width/vtm->TEMPLATE_X_SIZE/2,
+               (double)vt_window_width/vtm->TEMPLATE_X_SIZE,
                -(double)vt_window_height/vtm->TEMPLATE_Y_SIZE/4);
     view_template_scene->drawAll();
     driver->endScene();
   }
 
-  void update_ptr(Visual_Template_Match *vt_in)
+  void update_ptr(LocalViewMatch *vt_in)
   {
     vtm = vt_in;
   }
@@ -101,7 +98,7 @@ private:
 
   void draw_image(const double * image, bool greyscale, float x, float y, int width, int height, double scale_x, double scale_y)
    {
-    unsigned char* texture_ptr_start = (unsigned char *) malloc(width*height);
+    unsigned char* texture_ptr_start = (unsigned char *) malloc(width*height * (greyscale ? 1 : 3));
 
     const double * image_ptr = image;
     const double * image_end = image_ptr + width * height * (greyscale ? 1 : 3);
@@ -129,14 +126,12 @@ private:
   irr::IrrlichtDevice *device;
   irr::video::IVideoDriver * driver;
   irr::scene::ISceneManager * scene;
-  Visual_Template_Match *vtm;
+  LocalViewMatch *vtm;
   irr::scene::ISceneManager * view_template_scene;
 
   int vt_window_width, vt_window_height;
 };
 
-}
-;
-// namespace ratslam
+}; // namespace ratslam
 
 #endif /* VIEW_TEMPLATE_SCENE_HPP_ */

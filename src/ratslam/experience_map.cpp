@@ -25,24 +25,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "Experience_Map.h"
+#include "experience_map.h"
 #include "../utils/utils.h"
 
 #include <queue>
 #include <float.h>
 #include <iostream>
 
-#include <ros/console.h>
-
 using namespace std;
 
 namespace ratslam
 {
 
-Experience_Map::Experience_Map(ptree settings)
+ExperienceMap::ExperienceMap(ptree settings)
 {
   get_setting_from_ptree(EXP_CORRECTION, settings, "exp_correction", 0.5);
   get_setting_from_ptree(EXP_LOOPS, settings, "exp_loops", 10);
+  get_setting_from_ptree(EXP_INITIAL_EM_DEG, settings, "exp_initial_em_deg", 90.0);
+
   MAX_GOALS = 10;
 
   experiences.reserve(10000);
@@ -54,24 +54,22 @@ Experience_Map::Experience_Map(ptree settings)
   goal_timeout_s = 0;
   goal_success = false;
 
-  accum_delta_facing = M_PI / 2.0;
+  accum_delta_facing = EXP_INITIAL_EM_DEG * M_PI/180;
   accum_delta_x = 0;
   accum_delta_y = 0;
-
-  kidnapped = 0;
+  accum_delta_time_s = 0;
 
 }
 
-Experience_Map::~Experience_Map()
+ExperienceMap::~ExperienceMap()
 {
   links.clear();
   experiences.clear();
 }
 
 // create a new experience for a given position 
-int Experience_Map::on_create_experience(unsigned int exp_id)
+int ExperienceMap::on_create_experience(unsigned int exp_id)
 {
-  // todo use the exp_id;
 
   experiences.resize(experiences.size() + 1);
   Experience * new_exp = &(*(experiences.end() - 1));
@@ -103,18 +101,19 @@ int Experience_Map::on_create_experience(unsigned int exp_id)
 
 // update the current position of the experience map
 // since the last experience
-void Experience_Map::on_odo(double vtrans, double vrot, double time_diff_s)
+void ExperienceMap::on_odo(double vtrans, double vrot, double time_diff_s)
 {
   vtrans = vtrans * time_diff_s;
   vrot = vrot * time_diff_s;
   accum_delta_facing = clip_rad_180(accum_delta_facing + vrot);
   accum_delta_x = accum_delta_x + vtrans * cos(accum_delta_facing);
   accum_delta_y = accum_delta_y + vtrans * sin(accum_delta_facing);
+  accum_delta_time_s += time_diff_s;
 }
 
 // iterate the experience map. Perform a graph relaxing algorithm to allow
 // the map to partially converge.
-bool Experience_Map::iterate()
+bool ExperienceMap::iterate()
 {
   int i;
   unsigned int link_id;
@@ -165,11 +164,8 @@ bool Experience_Map::iterate()
 }
 
 // create a link between two experiences
-bool Experience_Map::on_create_link(int exp_id_from, int exp_id_to)
+bool ExperienceMap::on_create_link(int exp_id_from, int exp_id_to)
 {
-  if (kidnapped == 1)
-    return false;
-
   Experience * current_exp = &experiences[exp_id_from];
 
   // check if the link already exists
@@ -187,8 +183,7 @@ bool Experience_Map::on_create_link(int exp_id_from, int exp_id_to)
   new_link->d = sqrt(accum_delta_x * accum_delta_x + accum_delta_y * accum_delta_y);
   new_link->heading_rad = get_signed_delta_rad(current_exp->th_rad, atan2(accum_delta_y, accum_delta_x));
   new_link->facing_rad = get_signed_delta_rad(current_exp->th_rad, accum_delta_facing);
-  // todo: use time
-  // new_link->delta_time_s = delta_time_s;
+  new_link->delta_time_s = accum_delta_time_s;
 
   // add this link to the 'to exp' so we can go backwards through the em
   experiences[exp_id_from].links_from.push_back(links.size() - 1);
@@ -198,12 +193,10 @@ bool Experience_Map::on_create_link(int exp_id_from, int exp_id_to)
 }
 
 // change the current experience
-int Experience_Map::on_set_experience(int new_exp_id)
+int ExperienceMap::on_set_experience(int new_exp_id)
 {
-  // todo: check that this is a valid exp
-  cout << "EM:on_set_experience new_exp_id=" << new_exp_id << " current_exp_id=" << current_exp_id << endl;
-
-  kidnapped = 0;
+  if (new_exp_id > experiences.size() - 1)
+    return 0;
 
   if (new_exp_id == current_exp_id)
   {
@@ -234,7 +227,7 @@ double exp_euclidean_m(Experience *exp1, Experience *exp2)
 
 }
 
-double Experience_Map::dijkstra_distance_between_experiences(int id1, int id2)
+double ExperienceMap::dijkstra_distance_between_experiences(int id1, int id2)
 {
   double link_time_s;
   unsigned int id;
@@ -292,7 +285,7 @@ double Experience_Map::dijkstra_distance_between_experiences(int id1, int id2)
 }
 
 // return true if path to goal found
-bool Experience_Map::calculate_path_to_goal(double time_s)
+bool ExperienceMap::calculate_path_to_goal(double time_s)
 {
 
   unsigned int id;
@@ -403,7 +396,7 @@ bool Experience_Map::calculate_path_to_goal(double time_s)
   return true;
 }
 
-bool Experience_Map::get_goal_waypoint()
+bool ExperienceMap::get_goal_waypoint()
 {
   if (goal_list.size() == 0)
     return false;
@@ -411,8 +404,6 @@ bool Experience_Map::get_goal_waypoint()
   waypoint_exp_id = -1;
 
   double dist;
-  double dist_total = 0;
-  int temp_id = 0;
   unsigned int trace_exp_id = goal_list[0];
   Experience *robot_exp = &experiences[current_exp_id];
 
@@ -433,7 +424,7 @@ bool Experience_Map::get_goal_waypoint()
   return true;
 }
 
-void Experience_Map::add_goal(double x_m, double y_m)
+void ExperienceMap::add_goal(double x_m, double y_m)
 {
   int min_id = -1;
   double min_dist = DBL_MAX;
@@ -457,10 +448,9 @@ void Experience_Map::add_goal(double x_m, double y_m)
   if (min_dist < 0.1)
     add_goal(min_id);
 
-//	cout << "add_goal " << x_m << " " << y_m << " experiences[min_id] " << experiences[min_id].x_m << " " << experiences[min_id].y_m << endl;
 }
 
-double Experience_Map::get_subgoal_m() const
+double ExperienceMap::get_subgoal_m() const
 {
   return (
       waypoint_exp_id == -1 ? 0 :
@@ -469,7 +459,7 @@ double Experience_Map::get_subgoal_m() const
                   + (double)pow((experiences[waypoint_exp_id].y_m - experiences[current_exp_id].y_m), 2)));
 }
 
-double Experience_Map::get_subgoal_rad() const
+double ExperienceMap::get_subgoal_rad() const
 {
 //	if (waypoint_exp_id != -1)
 //		cout << "curr (" <<experiences[current_exp_id].x_m << "," << experiences[current_exp_id].y_m<< ") way (" << experiences[waypoint_exp_id].x_m<< "," <<experiences[waypoint_exp_id].y_m << ")" << endl;

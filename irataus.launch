@@ -3,12 +3,12 @@
 
 	<machine name="local_alt" address="localhost" default="true" />
 	
-	<node name="RatSLAMVisualTemplates" pkg="ratslam_ros" type="ratslam_vt" args="../config/config_irataus.txt _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMLocalViewCells" pkg="ratslam_ros" type="ratslam_lv" args="../config/config_irataus.txt _image_transport:=compressed" cwd="node" required="true" />
 	<node name="RatSLAMPoseCells" pkg="ratslam_ros" type="ratslam_pc" args="../config/config_irataus.txt _image_transport:=compressed" cwd="node" required="true" />
 	<node name="RatSLAMExperienceMap" pkg="ratslam_ros" type="ratslam_em" args="../config/config_irataus.txt _image_transport:=compressed" cwd="node" required="true" />
 
 	<node pkg="rxtools" type="rxplot" name="plot_vt_em" args="-b -1 -p 500 -r 1 -m . /irat_red/ViewTemplate/Template/current_id,/irat_red/PoseCell/TopologicalAction/dest_id" />
-	<node pkg="rosbag" type="record" name="record" args="/irat_red/ExperienceMap/Map /irat_red/ExperienceMap/RobotPose /irat_red/ViewTemplate/Template /irat_red/PoseCell/TopologicalAction -O ratslam_out.bag" />
+	<node pkg="rosbag" type="record" name="record" args="/irat_red/ExperienceMap/Map /irat_red/ExperienceMap/RobotPose /irat_red/LocalView/Template /irat_red/PoseCell/TopologicalAction /overhead/pose -O ratslam_out.bag" />
 
 	<node pkg="image_view" type="image_view" name="overhead" args="image:=/overhead/camera/image _image_transport:=compressed" />
 

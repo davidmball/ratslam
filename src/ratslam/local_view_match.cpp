@@ -26,7 +26,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Visual_Template_Match.h"
+#include "local_view_match.h"
 #include "../utils/utils.h"
 
 #include <stdlib.h>
@@ -36,47 +36,61 @@
 #include <iomanip>
 using namespace std;
 #include <boost/foreach.hpp>
+#include <algorithm>
 
+#include <stdio.h>
 
 namespace ratslam
 {
 
-Visual_Template_Match::Visual_Template_Match(ptree settings)
+
+FILE *fp;
+
+LocalViewMatch::LocalViewMatch(ptree settings)
 {
-  get_setting_from_ptree(MIN_PATCH_NORMALISATION_STD, settings, "vt_min_patch_normalisation_std", (double)0);
-  get_setting_from_ptree(PATCH_NORMALISATION, settings, "vt_patch_normalise", 0);
+  get_setting_from_ptree(VT_MIN_PATCH_NORMALISATION_STD, settings, "vt_min_patch_normalisation_std", (double)0);
+  get_setting_from_ptree(VT_PATCH_NORMALISATION, settings, "vt_patch_normalise", 0);
+  get_setting_from_ptree(VT_NORMALISATION, settings, "vt_normalisation", (bool) 0);
   get_setting_from_ptree(VT_SHIFT_MATCH, settings, "vt_shift_match", 25);
   get_setting_from_ptree(VT_STEP_MATCH, settings, "vt_step_match", 5);
 
   get_setting_from_ptree(VT_MATCH_THRESHOLD, settings, "vt_match_threshold", 0.03);
-  get_setting_from_ptree(IMAGE_WIDTH, settings, "image_width", 416);
-  get_setting_from_ptree(TEMPLATE_X_SIZE, settings, "template_x_size", IMAGE_WIDTH);
+  get_setting_from_ptree(TEMPLATE_X_SIZE, settings, "template_x_size", 1);
   get_setting_from_ptree(TEMPLATE_Y_SIZE, settings, "template_y_size", 1);
-  get_setting_from_ptree(IMAGE_HEIGHT, settings, "image_height", 240);
-  get_setting_from_ptree(IMAGE_VT_X_RANGE_MIN, settings, "image_vt_x_range0", 0);
-  get_setting_from_ptree(IMAGE_VT_X_RANGE_MAX, settings, "image_vt_x_range1", IMAGE_WIDTH);
-  get_setting_from_ptree(IMAGE_VT_Y_RANGE_MIN, settings, "image_vt_y_range0", 0);
-  get_setting_from_ptree(IMAGE_VT_Y_RANGE_MAX, settings, "image_vt_y_range1", IMAGE_HEIGHT);
+  get_setting_from_ptree(IMAGE_VT_X_RANGE_MIN, settings, "image_crop_x_min", 0);
+  get_setting_from_ptree(IMAGE_VT_X_RANGE_MAX, settings, "image_crop_x_max", -1);
+  get_setting_from_ptree(IMAGE_VT_Y_RANGE_MIN, settings, "image_crop_y_min", 0);
+  get_setting_from_ptree(IMAGE_VT_Y_RANGE_MAX, settings, "image_crop_y_max", -1);
 
   TEMPLATE_SIZE = TEMPLATE_X_SIZE * TEMPLATE_Y_SIZE;
 
   templates.reserve(10000);
 
-  current_view.reserve(TEMPLATE_SIZE);
+  current_view.resize(TEMPLATE_SIZE);
 
   current_vt = 0;
   prev_vt = 0;
 }
 
-Visual_Template_Match::~Visual_Template_Match()
-{
 
+LocalViewMatch::~LocalViewMatch()
+{
+  if (fp)
+    fclose(fp);
 }
 
-void Visual_Template_Match::on_image(const unsigned char *view_rgb, bool greyscale)
+void LocalViewMatch::on_image(const unsigned char *view_rgb, bool greyscale, unsigned int image_width, unsigned int image_height)
 {
   if (view_rgb == NULL)
     return;
+
+  IMAGE_WIDTH = image_width;
+  IMAGE_HEIGHT = image_height;
+
+  if (IMAGE_VT_X_RANGE_MAX == -1)
+    IMAGE_VT_X_RANGE_MAX = IMAGE_WIDTH;
+  if (IMAGE_VT_Y_RANGE_MAX == -1)
+    IMAGE_VT_Y_RANGE_MAX = IMAGE_HEIGHT;
 
   this->view_rgb = view_rgb;
   this->greyscale = greyscale;
@@ -85,7 +99,7 @@ void Visual_Template_Match::on_image(const unsigned char *view_rgb, bool greysca
   prev_vt = get_current_vt();
   unsigned int vt_match_id;
   compare(vt_error, vt_match_id);
-  if (vt_error <= get_vt_match_threshold())
+  if (vt_error <= VT_MATCH_THRESHOLD)
   {
     set_current_vt((int)vt_match_id);
     cout << "VTM[" << setw(4) << get_current_vt() << "] " << endl;
@@ -100,13 +114,8 @@ void Visual_Template_Match::on_image(const unsigned char *view_rgb, bool greysca
 
 }
 
-typedef struct td_visual_template_output
-{
-  unsigned int total_vts;
-  unsigned int current_vt;
-} Visual_Template_Output;
 
-void Visual_Template_Match::clip_view_x_y(int &x, int &y)
+void LocalViewMatch::clip_view_x_y(int &x, int &y)
 {
   if (x < 0)
     x = 0;
@@ -120,17 +129,17 @@ void Visual_Template_Match::clip_view_x_y(int &x, int &y)
 
 }
 
-void Visual_Template_Match::convert_view_to_view_template(bool grayscale)
+void LocalViewMatch::convert_view_to_view_template(bool grayscale)
 {
   int data_next = 0;
-  current_view.clear();
-  current_view.resize(TEMPLATE_X_SIZE * TEMPLATE_Y_SIZE);
-
   int sub_range_x = IMAGE_VT_X_RANGE_MAX - IMAGE_VT_X_RANGE_MIN;
   int sub_range_y = IMAGE_VT_Y_RANGE_MAX - IMAGE_VT_Y_RANGE_MIN;
   int x_block_size = sub_range_x / TEMPLATE_X_SIZE;
   int y_block_size = sub_range_y / TEMPLATE_Y_SIZE;
   int pos;
+
+  for (unsigned int i; i < current_view.size(); i++)
+    current_view[i] = 0;
 
   if (grayscale)
   {
@@ -173,17 +182,35 @@ void Visual_Template_Match::convert_view_to_view_template(bool grayscale)
         }
         current_view[data_next] /= (255.0 * 3.0);
         current_view[data_next] /= (x_block_size * y_block_size);
+
         data_next++;
       }
     }
   }
 
-  // now do patch normalisation
-  // make configurable
-  // +- patch size on teh pixel, ie 4 will give a 9x9
-  if (PATCH_NORMALISATION > 0)
+  if (VT_NORMALISATION)
   {
-    int patch_size = PATCH_NORMALISATION;
+    double min_value = 1.0, max_value = 0.0;
+
+    for (unsigned int i=0; i < current_view.size(); i++)
+    {
+      if (current_view[i] > max_value)
+        max_value = current_view[i];
+
+      if (current_view[i] < min_value)
+        min_value = current_view[i];
+    }
+    for (unsigned int i=0; i < current_view.size(); i++)
+    {
+      current_view[i] = (current_view[i] - min_value) * 1.0 / (max_value - min_value);
+    }
+  }
+
+  // now do patch normalisation
+  // +- patch size on the pixel, ie 4 will give a 9x9
+  if (VT_PATCH_NORMALISATION > 0)
+  {
+    int patch_size = VT_PATCH_NORMALISATION;
     int patch_total = (patch_size * 2 + 1) * (patch_size * 2 + 1);
     double patch_sum;
     double patch_mean;
@@ -194,7 +221,7 @@ void Visual_Template_Match::convert_view_to_view_template(bool grayscale)
     // first make a copy of the view
     std::vector<double> current_view_copy;
     current_view_copy.resize(current_view.size());
-    for (int i = 0; i < current_view.size(); i++)
+    for (unsigned int i = 0; i < current_view.size(); i++)
       current_view_copy[i] = current_view[i];
 
     // this code could be significantly optimimised ....
@@ -232,7 +259,7 @@ void Visual_Template_Match::convert_view_to_view_template(bool grayscale)
 
         patch_std = sqrt(patch_sum / patch_total);
 
-        if (patch_std < MIN_PATCH_NORMALISATION_STD)
+        if (patch_std < VT_MIN_PATCH_NORMALISATION_STD)
           current_view[x + y * TEMPLATE_X_SIZE] = 0.5;
         else
           current_view[x + y * TEMPLATE_X_SIZE] = max(
@@ -240,13 +267,22 @@ void Visual_Template_Match::convert_view_to_view_template(bool grayscale)
       }
     }
   }
+
+  double sum = 0;
+
+  // find the mean of the data
+  for (int i = 0; i < current_view.size(); i++)
+    sum += current_view[i];
+
+  current_mean = sum/current_view.size();
+
 }
 
 // create and add a visual template to the collection
-int Visual_Template_Match::create_template()
+int LocalViewMatch::create_template()
 {
   templates.resize(templates.size() + 1);
-  Visual_Template * new_template = &(*(templates.end() - 1));
+  VisualTemplate * new_template = &(*(templates.end() - 1));
 
   new_template->id = templates.size() - 1;
   double * data_ptr = &current_view[0];
@@ -254,13 +290,15 @@ int Visual_Template_Match::create_template()
   for (int i = 0; i < TEMPLATE_SIZE; i++)
     new_template->data.push_back(*(data_ptr++));
 
+  new_template->mean = current_mean;
+
   return templates.size() - 1;
 }
 
 // compare a visual template to all the stored templates, allowing for 
 // slen pixel shifts in each direction
 // returns the matching template and the MSE
-void Visual_Template_Match::compare(double &vt_err, unsigned int &vt_match_id)
+void LocalViewMatch::compare(double &vt_err, unsigned int &vt_match_id)
 {
   if (templates.size() == 0)
   {
@@ -285,12 +323,17 @@ void Visual_Template_Match::compare(double &vt_err, unsigned int &vt_match_id)
   int row_size;
   int sub_row_size;
   double *column_end_ptr;
-  Visual_Template vt;
+  VisualTemplate vt;
 
   int offset;
+  double epsilon = 0.005;
 
   BOOST_FOREACH(vt, templates)
   {
+
+    if (abs(current_mean - vt.mean) > VT_MATCH_THRESHOLD + epsilon)
+      continue;
+
     // for each vt try matching the view at different offsets
     // try to fast break based on error already great than previous errors
     // handles 2d images shifting only in the x direction
@@ -313,7 +356,7 @@ void Visual_Template_Match::compare(double &vt_err, unsigned int &vt_match_id)
 
         // fast breaks
         if (cdiff > mindiff)
-        break;
+          break;
       }
 
       if (cdiff < mindiff)

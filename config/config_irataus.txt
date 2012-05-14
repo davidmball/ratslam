@@ -2,8 +2,8 @@
 topic_root=irat_red
                                                 	
 [ratslam]
-image_vt_y_range1=150
-template_x_size=200
+image_crop_y_max=150
+template_x_size=60
 template_y_size=20
 vt_shift_match = 4
 vt_step_match = 1
@@ -20,14 +20,9 @@ exp_initial_em_deg=140
 
 [draw]
 enable=1
-vt_window_x=500
-vt_window_y=500
-vt_window_width=500
-exp_map_x=500
-exp_map_y=500
+vt_window_width=416
+vt_window_height=480
 exp_map_size=500
-posecells_x=500
-posecells_y=0
 posecells_size=250
 media_path=../src/media
 image_file=irat_sm.tga

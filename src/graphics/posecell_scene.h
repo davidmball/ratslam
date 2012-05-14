@@ -25,22 +25,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef POSE_CELLS_SCENE_HPP_
-#define POSE_CELLS_SCENE_HPP_
+#ifndef POSE_CELL_SCENE_HPP_
+#define POSE_CELL_SCENE_HPP_
 
 #include "../utils/utils.h"
-#include "../ratslam/Pose_Cell_Network.h"
-#include "PathGraphNode.h"
+#include "../ratslam/posecell_network.h"
+#include "path_node.h"
 
 #include <irrlicht/irrlicht.h>
 
 namespace ratslam
 {
 
-class PoseCellsScene
+class PosecellScene
 {
 public:
-  PoseCellsScene(ptree & settings, Pose_Cell_Network *in_pc) :
+  PosecellScene(ptree & settings, PosecellNetwork *in_pc) :
       pose_cells_scene(NULL), particles(NULL), position_line(NULL), pose_cell_history(NULL), posecells(in_pc)
   {
   window_width = 400;
@@ -118,7 +118,7 @@ public:
 
   }
 
-  ~PoseCellsScene()
+  ~PosecellScene()
   {
 
   }
@@ -186,7 +186,7 @@ public:
     driver->endScene();
   }
 
-  void update_ptr(Pose_Cell_Network *pc_in)
+  void update_ptr(PosecellNetwork *pc_in)
   {
     clear_history();
     posecells = pc_in;
@@ -198,7 +198,7 @@ private:
   irr::scene::IBillboardSceneNode ** particles;
   irr::scene::IMeshSceneNode * position_line;
   PathNode * pose_cell_history;
-  Pose_Cell_Network *posecells;
+  PosecellNetwork *posecells;
 
   irr::IrrlichtDevice *device;
   irr::video::IVideoDriver * driver;

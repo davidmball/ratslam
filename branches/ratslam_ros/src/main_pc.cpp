@@ -34,15 +34,15 @@ using namespace std;
 
 #include <ros/ros.h>
 
-#include "ratslam/Pose_Cell_Network.h"
+#include "ratslam/posecell_network.h"
 #include <ratslam_ros/TopologicalAction.h>
 #include <nav_msgs/Odometry.h>
 #include <ratslam_ros/ViewTemplate.h>
 
 
 #if HAVE_IRRLICHT
-#include "graphics/PoseCellsScene.hpp"
-ratslam::PoseCellsScene *pcs;
+#include "graphics/posecell_scene.h"
+ratslam::PosecellScene *pcs;
 bool use_graphics;
 #endif
 
@@ -50,7 +50,7 @@ using namespace ratslam;
 
 ratslam_ros::TopologicalAction pc_output;
 
-void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::Pose_Cell_Network *pc, ros::Publisher * pub_pc)
+void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::PosecellNetwork *pc, ros::Publisher * pub_pc)
 {
   ROS_DEBUG_STREAM("PC:odo_callback{" << ros::Time::now() << "} seq=" << odo->header.seq << " v=" << odo->twist.twist.linear.x << " r=" << odo->twist.twist.angular.z);
 
@@ -63,7 +63,7 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::Pose_Cell_Network *pc
     pc_output.src_id = pc->get_current_exp_id();
     pc->on_odo(odo->twist.twist.linear.x, odo->twist.twist.angular.z, time_diff);
     pc_output.action = pc->get_action();
-    if (pc_output.action != ratslam::Pose_Cell_Network::NO_ACTION)
+    if (pc_output.action != ratslam::PosecellNetwork::NO_ACTION)
     {
       pc_output.header.stamp = ros::Time::now();
       pc_output.header.seq++;
@@ -84,7 +84,7 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::Pose_Cell_Network *pc
   prev_time = odo->header.stamp;
 }
 
-void template_callback(ratslam_ros::ViewTemplateConstPtr vt, ratslam::Pose_Cell_Network *pc, ros::Publisher * pub_pc)
+void template_callback(ratslam_ros::ViewTemplateConstPtr vt, ratslam::PosecellNetwork *pc, ros::Publisher * pub_pc)
 {
   ROS_DEBUG_STREAM("PC:vt_callback{" << ros::Time::now() << "} seq=" << vt->header.seq << " id=" << vt->current_id);
 
@@ -102,6 +102,10 @@ void template_callback(ratslam_ros::ViewTemplateConstPtr vt, ratslam::Pose_Cell_
 
 int main(int argc, char * argv[])
 {
+  ROS_INFO_STREAM(argv[0] << " - openRatSLAM Copyright (C) 2012 David Ball and Scott Heath");
+  ROS_INFO_STREAM("RatSLAM algorithm by Michael Milford and Gordon Wyeth");
+  ROS_INFO_STREAM("Distributed under the GNU GPL v3, see the included license file.");
+
   if (argc < 2)
   {
     ROS_FATAL_STREAM("USAGE: " << argv[0] << " <config_file>");
@@ -123,12 +127,12 @@ int main(int argc, char * argv[])
 
 
 
-  ratslam::Pose_Cell_Network * pc = new ratslam::Pose_Cell_Network(ratslam_settings);
+  ratslam::PosecellNetwork * pc = new ratslam::PosecellNetwork(ratslam_settings);
   ros::Publisher pub_pc = node.advertise<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction", 0);
 
   ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>(topic_root + "/odom", 0, boost::bind(odo_callback, _1, pc, &pub_pc), ros::VoidConstPtr(),
                                                                     ros::TransportHints().tcpNoDelay());
-  ros::Subscriber sub_template = node.subscribe<ratslam_ros::ViewTemplate>(topic_root + "/ViewTemplate/Template", 0, boost::bind(template_callback, _1, pc, &pub_pc),
+  ros::Subscriber sub_template = node.subscribe<ratslam_ros::ViewTemplate>(topic_root + "/LocalView/Template", 0, boost::bind(template_callback, _1, pc, &pub_pc),
                                                                            ros::VoidConstPtr(), ros::TransportHints().tcpNoDelay());
 #ifdef HAVE_IRRLICHT
   boost::property_tree::ptree draw_settings;
@@ -136,7 +140,7 @@ int main(int argc, char * argv[])
   get_setting_from_ptree(use_graphics, draw_settings, "enable", true);
   if (use_graphics)
   {
-	pcs = new ratslam::PoseCellsScene(draw_settings, pc);
+	pcs = new ratslam::PosecellScene(draw_settings, pc);
   }
 #endif
 

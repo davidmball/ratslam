@@ -27,7 +27,7 @@
  */
 
 /*
- * The Pose_Cell_Network class handles continous attractor network dynamics
+ * The PosecellNetwork class handles continous attractor network dynamics
  * as the cognitive map of a rodent might. A cube of cells is allocated with
  * connections between neighbouring cells. The three dimensions indicate
  * x, y position and facing direction.
@@ -39,13 +39,12 @@
 #define _USE_MATH_DEFINES
 #include "math.h"
 
-// todo: replace this with iostream
 #include <stdio.h>
 
 #include <boost/property_tree/ini_parser.hpp>
 using boost::property_tree::ptree;
 
-typedef double PoseCell;
+typedef double Posecell;
 
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/utility.hpp>
@@ -55,7 +54,7 @@ typedef double PoseCell;
 namespace ratslam
 {
 
-typedef struct td_posecell_visual_template
+struct PosecellVisualTemplate
 {
         unsigned int id;
         double pc_x, pc_y, pc_th;
@@ -70,32 +69,32 @@ typedef struct td_posecell_visual_template
           ar & decay;
         }
 
-} Posecell_Visual_Template;
+};
 
-struct Posecell_Experience {
+struct PosecellExperience {
 
   double x_pc, y_pc, th_pc;
   int vt_id;
 };
 
 
-class Pose_Cell_Network
+class PosecellNetwork
 {
 
 public:
 
-  friend class PoseCellsScene;
+  friend class PosecellScene;
 
-  enum Pose_Cell_Action {NO_ACTION = 0, CREATE_NODE, CREATE_EDGE, SET_NODE};
+  enum PosecellAction {NO_ACTION = 0, CREATE_NODE, CREATE_EDGE, SET_NODE};
 
-  Pose_Cell_Network(ptree settings);
-  ~Pose_Cell_Network();
+  PosecellNetwork(ptree settings);
+  ~PosecellNetwork();
 
   void on_odo(double vtrans, double vrot, double time_diff_s);
 
   void on_view_template(unsigned int vt);
 
-  Pose_Cell_Action get_action();
+  PosecellAction get_action();
 
   // these updated by find_best()
   double x()
@@ -134,6 +133,7 @@ public:
       ar & PC_GLOBAL_INHIB;
 
       ar & VT_ACTIVE_DECAY;
+      ar & PC_VT_RESTORE;
 
       ar & best_x;
       ar & best_y;
@@ -159,6 +159,7 @@ public:
       ar & PC_GLOBAL_INHIB;
 
       ar & VT_ACTIVE_DECAY;
+      ar & PC_VT_RESTORE;
 
       ar & best_x;
       ar & best_y;
@@ -202,12 +203,12 @@ private:
   // packet.
   double find_best();
 
-  Pose_Cell_Network()
+  PosecellNetwork()
   {
     ;
   }
-  Pose_Cell_Network(const Pose_Cell_Network & other);
-  const Pose_Cell_Network & operator=(const Pose_Cell_Network & other);
+  PosecellNetwork(const PosecellNetwork & other);
+  const PosecellNetwork & operator=(const PosecellNetwork & other);
   void pose_cell_builder();
   bool pose_cell_excite_helper(int x, int y, int z);
   bool pose_cell_inhibit_helper(int x, int y, int z);
@@ -226,9 +227,9 @@ private:
   double PC_GLOBAL_INHIB;
 
   double VT_ACTIVE_DECAY;
-
+  double PC_VT_RESTORE;
   double PC_VT_INJECT_ENERGY;
-  double POSECELL_VTRANS_SCALING;
+  double PC_CELL_X_SIZE;
 
   double EXP_DELTA_PC_THRESHOLD;
 
@@ -236,15 +237,15 @@ private:
   double best_y;
   double best_th;
 
-  PoseCell *** posecells;
-  PoseCell * posecells_memory;
+  Posecell *** posecells;
+  Posecell * posecells_memory;
   int posecells_memory_size;
   int posecells_elements;
-  PoseCell *** pca_new;
-  PoseCell * pca_new_memory;
-  PoseCell ** pca_new_rot_ptr;
-  PoseCell ** pca_new_rot_ptr2;
-  PoseCell * posecells_plane_th;
+  Posecell *** pca_new;
+  Posecell * pca_new_memory;
+  Posecell ** pca_new_rot_ptr;
+  Posecell ** pca_new_rot_ptr2;
+  Posecell * posecells_plane_th;
   double * PC_W_EXCITE;
   double * PC_W_INHIB;
 
@@ -267,8 +268,8 @@ private:
 
   double PC_C_SIZE_TH;
 
-  std::vector<Posecell_Visual_Template> visual_templates;
-  std::vector<Posecell_Experience> experiences;
+  std::vector<PosecellVisualTemplate> visual_templates;
+  std::vector<PosecellExperience> experiences;
 
   unsigned int current_vt, prev_vt;
   unsigned int current_exp, prev_exp;

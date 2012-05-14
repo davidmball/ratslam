@@ -2,10 +2,10 @@
 topic_root=stlucia
                                                 	
 [ratslam]
-image_vt_x_range0=40
-image_vt_x_range1=600
-image_vt_y_range0=120
-image_vt_y_range1=280
+image_crop_x_min=40
+image_crop_x_max=600
+image_crop_y_min=120
+image_crop_y_max=280
 vt_match_threshold = 0.048
 template_x_size=280
 template_y_size=1
@@ -41,14 +41,9 @@ vtrans_max=20
 
 [draw]
 enable=1
-vt_window_x=500
-vt_window_y=500
-vt_window_width=500
-exp_map_x=500
-exp_map_y=500
+vt_window_width=640
+vt_window_height=900
 exp_map_size=500
-posecells_x=500
-posecells_y=0
 posecells_size=250
 media_path=../src/media
 image_file=irat_sm.tga

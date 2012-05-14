@@ -37,7 +37,6 @@
 #define _USE_MATH_DEFINES
 #include "math.h"
 
-// todo: replace this with iostream
 #include <stdio.h>
 #include <vector>
 #include <deque>
@@ -60,7 +59,7 @@ namespace ratslam
  * between two experiences.
  */
 
-typedef struct td_link
+struct Link
 {
   double d;
   double heading_rad;
@@ -80,13 +79,13 @@ typedef struct td_link
       ar & delta_time_s;
     }
 
-} Link;
+};
 
 /*
  * The Experience structure describes
  * a node in the Experience_Map.
  */
-typedef struct td_experience
+struct Experience
 {
   int id; // its own id
 
@@ -112,18 +111,18 @@ typedef struct td_experience
       ar & goal_to_current & current_to_goal;
     }
 
-} Experience;
+};
 
 class ExperienceMapScene;
 
-class Experience_Map
+class ExperienceMap
 {
 
 public:
   friend class ExperienceMapScene;
 
-  Experience_Map(ptree settings);
-  ~Experience_Map();
+  ExperienceMap(ptree settings);
+  ~ExperienceMap();
 
   // create a new experience for a given position
   int on_create_experience(unsigned int exp_id);
@@ -153,18 +152,14 @@ public:
     return experiences.size();
   }
 
+  int get_num_links()
+  {
+    return links.size();
+  }
+
   int get_current_id()
   {
     return current_exp_id;
-  }
-
-  double get_exp_correction() const
-  {
-    return EXP_CORRECTION;
-  }
-  int get_exp_loops() const
-  {
-    return EXP_LOOPS;
   }
 
   // functions for setting and handling goals.
@@ -172,7 +167,6 @@ public:
   void add_goal(int id)
   {
     goal_list.push_back(id);
-    std::cout << "Added goal #" << goal_list.size() << std::endl;
   }
   bool calculate_path_to_goal(double time_s);
   bool get_goal_waypoint();
@@ -199,16 +193,6 @@ public:
     return goal_list;
   }
 
-  // calculate distance between two experiences using djikstras algorithm
-  // can be very slow for many experiences
-  double dijkstra_distance_between_experiences(int id1, int id2);
-
-  // if this function is called, the experience map will not try and
-  // join the next new node to the rest of the map
-  void set_kidnapped()
-  {
-    kidnapped = 1;
-  }
 
   template<typename Archive>
     void serialize(Archive& ar, const unsigned int version)
@@ -216,6 +200,7 @@ public:
       ar & EXP_LOOPS;
       ar & EXP_CORRECTION;
       ar & MAX_GOALS;
+      ar & EXP_INITIAL_EM_DEG;
 
       ar & experiences;
       ar & links;
@@ -226,26 +211,32 @@ public:
       ar & accum_delta_facing;
       ar & accum_delta_x;
       ar & accum_delta_y;
+      ar & accum_delta_time_s;
 
       ar & waypoint_exp_id;
       ar & goal_success;
       ar & goal_timeout_s;
       ar & goal_path_final_exp_id;
 
-      ar & kidnapped;
+
     }
 
 private:
   friend class boost::serialization::access;
 
-  Experience_Map()
+  ExperienceMap()
   {
     ;
   }
+  // calculate distance between two experiences using djikstras algorithm
+  // can be very slow for many experiences
+  double dijkstra_distance_between_experiences(int id1, int id2);
+
 
   int EXP_LOOPS;
   double EXP_CORRECTION;
   unsigned int MAX_GOALS;
+  double EXP_INITIAL_EM_DEG;
 
   std::vector<Experience> experiences;
   std::vector<Link> links;
@@ -256,13 +247,13 @@ private:
   double accum_delta_facing;
   double accum_delta_x;
   double accum_delta_y;
+  double accum_delta_time_s;
 
   int waypoint_exp_id;
   bool goal_success;
   double goal_timeout_s;
   unsigned int goal_path_final_exp_id;
 
-  int kidnapped;
 };
 
 }

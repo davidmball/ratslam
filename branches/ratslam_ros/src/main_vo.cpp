@@ -44,26 +44,19 @@ using namespace std;
 
 #include <image_transport/image_transport.h>
 
-boost::property_tree::ptree settings;
-boost::property_tree::ptree vo_settings;
 
+ratslam::VisualOdometry *vo = NULL;
 ros::Publisher pub_vo;
 
 using namespace ratslam;
 
 void image_callback(sensor_msgs::ImageConstPtr image)
 {
+  ROS_DEBUG_STREAM("VO:image_callback{" << ros::Time::now() << "} seq=" << image->header.seq);
+
   static nav_msgs::Odometry odom_output;
-  static ratslam::VisualOdometry *vo = NULL;
 
-  if (!vo)
-   {
-     vo_settings.put("image_width", image->width);
-     vo_settings.put("image_height", image->height);
-     vo = new ratslam::VisualOdometry(vo_settings);
-   }
-
-  vo->on_image(&image->data[0], (image->encoding == "bgr8" ? false : true), &odom_output.twist.twist.linear.x, &odom_output.twist.twist.angular.z);
+  vo->on_image(&image->data[0], (image->encoding == "bgr8" ? false : true), image->width, image->height, &odom_output.twist.twist.linear.x, &odom_output.twist.twist.angular.z);
 
   odom_output.header.stamp = image->header.stamp;
   odom_output.header.seq++;
@@ -74,7 +67,9 @@ void image_callback(sensor_msgs::ImageConstPtr image)
 
 int main(int argc, char * argv[])
 {
-  std::string topic_root = "";
+  ROS_INFO_STREAM(argv[0] << " - openRatSLAM Copyright (C) 2012 David Ball and Scott Heath");
+  ROS_INFO_STREAM("RatSLAM algorithm by Michael Milford and Gordon Wyeth");
+  ROS_INFO_STREAM("Distributed under the GNU GPL v3, see the included license file.");
 
   if (argc < 2)
   {
@@ -82,11 +77,15 @@ int main(int argc, char * argv[])
     exit(-1);
   }
 
-  boost::property_tree::ptree settings, general_settings;
+  std::string topic_root = "";
+
+  boost::property_tree::ptree settings, general_settings, vo_settings;
   read_ini(argv[1], settings);
   ratslam::get_setting_child(vo_settings, settings, "visual_odometry", true);
   ratslam::get_setting_child(general_settings, settings, "general", true);
   ratslam::get_setting_from_ptree(topic_root, general_settings, "topic_root", (std::string) "");
+
+  vo = new ratslam::VisualOdometry(vo_settings);
 
   if (!ros::isInitialized())
   {

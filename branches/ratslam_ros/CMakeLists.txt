@@ -27,16 +27,16 @@ rosbuild_genmsg()
 #rosbuild_gensrv()
 
 #common commands for building c++ executables and libraries
-rosbuild_add_library(ratslam src/ratslam/Experience_Map.cpp src/ratslam/Pose_Cell_Network.cpp src/ratslam/Visual_Template_Match.cpp src/ratslam/visual_odometry.cpp)
+rosbuild_add_library(ratslam src/ratslam/experience_map.cpp src/ratslam/posecell_network.cpp src/ratslam/local_view_match.cpp src/ratslam/visual_odometry.cpp)
 
 rosbuild_add_boost_directories()
 
 # uncomment is you don't have irrlicht installed
 add_definitions("-DHAVE_IRRLICHT")
 
-rosbuild_add_executable(ratslam_vt src/main_vt.cpp)
-target_link_libraries(ratslam_vt ratslam Irrlicht GL opencv_core opencv_imgproc opencv_highgui)
-rosbuild_link_boost(ratslam_vt serialization)
+rosbuild_add_executable(ratslam_lv src/main_lv.cpp)
+target_link_libraries(ratslam_lv ratslam Irrlicht GL opencv_core opencv_imgproc opencv_highgui)
+rosbuild_link_boost(ratslam_lv serialization)
 
 rosbuild_add_executable(ratslam_pc src/main_pc.cpp)
 target_link_libraries(ratslam_pc ratslam Irrlicht GL)

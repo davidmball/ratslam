@@ -29,7 +29,7 @@
 #ifndef EXPERIENCE_MAP_SCENE_HPP
 #define EXPERIENCE_MAP_SCENE_HPP
 
-#include "../ratslam/Experience_Map.h"
+#include "../ratslam/experience_map.h"
 #include "../utils/utils.h"
 
 #include <irrlicht/irrlicht.h>
@@ -37,7 +37,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-#include "PathGraphNode.h"
+#include "path_node.h"
 
 namespace ratslam
 {
@@ -45,7 +45,7 @@ namespace ratslam
 class ExperienceMapScene
 {
 public:
-  ExperienceMapScene(ptree & settings, Experience_Map *in_map) :
+  ExperienceMapScene(ptree & settings, ExperienceMap *in_map) :
       exp_map_scene(NULL), exp_map_path(NULL), exp_map_goal_path(NULL), exp_map_exps(NULL), map(in_map)
   {
 
@@ -93,11 +93,22 @@ public:
     }
 
     // add a cube node and texture it with the irat
+    if (irat_texture)
+    {
     irat_node = exp_map_scene->addMeshSceneNode(
         exp_map_scene->getGeometryCreator()->createCubeMesh(
             irr::core::vector3df((irr::f32)(irat_texture->getSize().Width / 8.0),
                                  (irr::f32)(irat_texture->getSize().Height / 8.0), (irr::f32)0.1)),
         NULL);
+    }
+    else
+    {
+    irat_node = exp_map_scene->addMeshSceneNode(
+        exp_map_scene->getGeometryCreator()->createCubeMesh(
+            irr::core::vector3df((irr::f32)(535.0 / 8.0),
+                                 (irr::f32)(289.0 / 8.0), (irr::f32)0.1)),
+        NULL);
+    }
     irat_node->getMaterial(0).EmissiveColor = irr::video::SColor(255, 255, 255, 255);
 	if (irat_texture)
 	{
@@ -334,7 +345,7 @@ public:
     y_m = (double)max_y - (y - viewport_y) / viewport_height * (max_y - min_y);
   }
 
-  void update_ptr(Experience_Map *in_map)
+  void update_ptr(ExperienceMap *in_map)
   {
     map = in_map;
   }
@@ -361,7 +372,7 @@ private:
 
   std::vector<irr::scene::IBillboardTextSceneNode*> numberNodes;
 
-  ratslam::Experience_Map *map;
+  ratslam::ExperienceMap *map;
 };
 
 }

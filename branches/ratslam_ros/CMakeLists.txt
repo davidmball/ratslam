@@ -11,6 +11,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 set(ROS_BUILD_TYPE Release)
 #set(ROS_BUILD_TYPE Debug)
 
+rosbuild_find_ros_package(actionlib_msgs)
+include(${actionlib_msgs_PACKAGE_PATH}/cmake/actionbuild.cmake)
+genaction()
+
 rosbuild_init()
 
 find_package(Irrlicht REQUIRED)

@@ -38,22 +38,29 @@
 #include "graphics/experience_map_scene.h"
 #include <ratslam_ros/TopologicalMap.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <nav_msgs/Path.h>
 #include <tf/transform_broadcaster.h>
 
 #include <visualization_msgs/Marker.h>
 
+
+
 ros::Publisher pub_em;
 ros::Publisher pub_pose;
 ros::Publisher pub_em_markers;
+ros::Publisher pub_goal_path;
 geometry_msgs::PoseStamped pose_output;
 ratslam_ros::TopologicalMap em_map;
 visualization_msgs::Marker em_marker;
+
 
 #ifdef HAVE_IRRLICHT
 #include "graphics/experience_map_scene.h"
 ratslam::ExperienceMapScene *ems;
 bool use_graphics;
 #endif
+
+FILE * log_file = fopen("log.txt", "w");
 
 using namespace ratslam;
 
@@ -67,6 +74,59 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::ExperienceMap *em)
   {
     double time_diff = (odo->header.stamp - prev_time).toSec();
     em->on_odo(odo->twist.twist.linear.x, odo->twist.twist.angular.z, time_diff);
+  }
+  
+  static ros::Time prev_goal_update(0);
+  
+  if (em->get_current_goal_id() >= 0)
+  {
+	 // (prev_goal_update.toSec() == 0 || (odo->header.stamp - prev_goal_update).toSec() > 5)
+	 //em->calculate_path_to_goal(odo->header.stamp.toSec());
+	  
+	  
+	prev_goal_update = odo->header.stamp;
+	  
+	em->calculate_path_to_goal(odo->header.stamp.toSec());
+  
+	static nav_msgs::Path path;
+	  if (em->get_current_goal_id() >= 0)
+	  {
+		em->get_goal_waypoint();
+		  
+
+		  static geometry_msgs::PoseStamped pose;
+		  path.header.stamp = ros::Time::now();
+		  path.header.frame_id = "1";
+		  
+		  pose.header.seq =0;
+		  pose.header.frame_id = "1";
+		  path.poses.clear();
+		  unsigned int trace_exp_id = em->get_goals()[0];
+		  while (trace_exp_id != em->get_goal_path_final_exp())
+		  {
+			  pose.pose.position.x = em->get_experience(trace_exp_id)->x_m;
+			  pose.pose.position.y = em->get_experience(trace_exp_id)->y_m;
+			  path.poses.push_back(pose);
+			  pose.header.seq++;
+			  
+			  trace_exp_id = em->get_experience(trace_exp_id)->goal_to_current;
+		  }
+		  
+		  pub_goal_path.publish(path);
+		  
+		  path.header.seq++;
+		  
+		  
+	  }
+	  else
+	  {
+		  path.header.stamp = ros::Time::now();
+		  path.header.frame_id = "1";
+		  path.poses.clear();
+		  pub_goal_path.publish(path);
+		  
+		  path.header.seq++;
+	  }
   }
 
   prev_time = odo->header.stamp;
@@ -182,6 +242,8 @@ void action_callback(ratslam_ros::TopologicalActionConstPtr action, ratslam::Exp
   transform.setOrigin( tf::Vector3(0, 0, 0.0) );
   transform.setRotation( tf::Quaternion(0, 0, 0) );
   br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "world2"));
+  
+
 
 
 #ifdef HAVE_IRRLICHT
@@ -191,6 +253,13 @@ void action_callback(ratslam_ros::TopologicalActionConstPtr action, ratslam::Exp
 	ems->draw_all();
   }
 #endif
+}
+
+void set_goal_pose_callback(geometry_msgs::PoseStampedConstPtr pose, ratslam::ExperienceMap * em)
+{
+	em->add_goal(pose->pose.position.x, pose->pose.position.y);
+	fprintf(log_file, "added goal\n");
+	fflush(log_file);
 }
 
 
@@ -229,6 +298,8 @@ int main(int argc, char * argv[])
   pub_em_markers = node.advertise<visualization_msgs::Marker>(topic_root + "/ExperienceMap/MapMarker", 1);
 
   pub_pose = node.advertise<geometry_msgs::PoseStamped>(topic_root + "/ExperienceMap/RobotPose", 1);
+  
+  pub_goal_path = node.advertise<nav_msgs::Path>(topic_root + "/ExperienceMap/PathToGoal", 1);
 
 
   ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>(topic_root + "/odom", 0,
@@ -238,6 +309,10 @@ int main(int argc, char * argv[])
                                                                               boost::bind(action_callback, _1, em),
                                                                               ros::VoidConstPtr(), ros::TransportHints().tcpNoDelay());
 
+
+   ros::Subscriber sub_goal = node.subscribe<geometry_msgs::PoseStamped>(topic_root + "/ExperienceMap/SetGoalPose", 0,
+	boost::bind(set_goal_pose_callback, _1, em), ros::VoidConstPtr(), ros::TransportHints().tcpNoDelay());
+  
 #ifdef HAVE_IRRLICHT
   boost::property_tree::ptree draw_settings;
   get_setting_child(draw_settings, settings, "draw", true);
@@ -247,7 +322,6 @@ int main(int argc, char * argv[])
 	ems = new ratslam::ExperienceMapScene(draw_settings, em);
   }
 #endif
-
 
   ros::spin();
 

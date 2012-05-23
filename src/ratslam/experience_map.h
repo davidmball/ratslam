@@ -188,9 +188,15 @@ public:
   }
   double get_subgoal_m() const;
   double get_subgoal_rad() const;
+  
   const std::deque<int> &get_goals() const
   {
     return goal_list;
+  }
+  
+  unsigned int get_goal_path_final_exp()
+  {
+	  return goal_path_final_exp_id;
   }
 
 

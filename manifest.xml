@@ -12,12 +12,10 @@
   <depend package="roscpp"/>
   <depend package="sensor_msgs"/>
   <depend package="nav_msgs"/>
-  <!--<depend package="opencv2"/>-->
+  <depend package="opencv2"/>
   <depend package="tf"/>
   <depend package="visualization_msgs"/>
   <depend package="image_transport" />
-  <depend package="actionlib" />
-  <depend package="actionlib_msgs" />
-  <depend package="move_base_msgs" />
+  <depend package="nav_msgs" />
 </package>
 

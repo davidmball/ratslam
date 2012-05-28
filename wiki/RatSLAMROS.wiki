@@ -40,8 +40,8 @@ rosmake
 ==Running RatSLAM==
 
 To use one of our pre-packaged bag files, download the bag file for either:
- * the iRat, a small robot platform
- * St Lucia, a camera mounted on a car
+ * iRat in Aus
+ * Car in St Lucia
 
 both are available [https://wiki.qut.edu.au/display/cyphy/OpenRatSLAM+datasets here]
 

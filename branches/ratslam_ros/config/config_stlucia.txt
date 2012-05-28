@@ -4,20 +4,20 @@ topic_root=stlucia
 [ratslam]
 image_crop_x_min=40
 image_crop_x_max=600
-image_crop_y_min=120
-image_crop_y_max=280
-vt_match_threshold = 0.048
-template_x_size=280
-template_y_size=1
-vt_shift_match = 11
-vt_step_match = 5
-vt_normalisation = 1
+image_crop_y_min=150
+image_crop_y_max=300
+vt_match_threshold = 0.085
+template_x_size=60
+template_y_size=10
+vt_shift_match = 5
+vt_step_match = 1
+vt_normalisation = 0.4
 pc_vt_restore=0.04
 
 pc_cell_x_size = 2
 pc_dim_xy = 30
 exp_delta_pc_threshold = 1.0
-pc_vt_inject_energy = 0.10
+pc_vt_inject_energy = 0.15
 vt_active_decay = 1.0
 
 exp_loops=20

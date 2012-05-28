@@ -9,8 +9,6 @@
 	<node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
 	
 	<node pkg="rxtools" type="rxplot" name="plot_vt_em" args="-b -1 -p 500 -r 1 -m . /stlucia/LocalView/Template/current_id,/stlucia/PoseCell/TopologicalAction/dest_id" />
-	<node pkg="rosbag" type="record" name="record" args="/stlucia/ExperienceMap/Map /stlucia/ExperienceMap/RobotPose /stlucia/LocalView/Template /stlucia/PoseCell/TopologicalAction -O /home/ball7/data/stlucia/ratslam_out.bag" />
-
-	<!-- node pkg="rosbag" type="play" name="play" args="/insertpathhere/stlucia.bag"/ --> 
+	<node pkg="rosbag" type="record" name="record" args="/stlucia/ExperienceMap/Map /stlucia/ExperienceMap/RobotPose /stlucia/LocalView/Template /stlucia/PoseCell/TopologicalAction -O ratslam_out.bag" />
 
 </launch>

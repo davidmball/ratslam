@@ -44,13 +44,12 @@ namespace ratslam
 {
 
 
-FILE *fp;
 
 LocalViewMatch::LocalViewMatch(ptree settings)
 {
   get_setting_from_ptree(VT_MIN_PATCH_NORMALISATION_STD, settings, "vt_min_patch_normalisation_std", (double)0);
   get_setting_from_ptree(VT_PATCH_NORMALISATION, settings, "vt_patch_normalise", 0);
-  get_setting_from_ptree(VT_NORMALISATION, settings, "vt_normalisation", (bool) 0);
+  get_setting_from_ptree(VT_NORMALISATION, settings, "vt_normalisation", (double) 0);
   get_setting_from_ptree(VT_SHIFT_MATCH, settings, "vt_shift_match", 25);
   get_setting_from_ptree(VT_STEP_MATCH, settings, "vt_step_match", 5);
 
@@ -75,8 +74,7 @@ LocalViewMatch::LocalViewMatch(ptree settings)
 
 LocalViewMatch::~LocalViewMatch()
 {
-  if (fp)
-    fclose(fp);
+
 }
 
 void LocalViewMatch::on_image(const unsigned char *view_rgb, bool greyscale, unsigned int image_width, unsigned int image_height)
@@ -188,21 +186,20 @@ void LocalViewMatch::convert_view_to_view_template(bool grayscale)
     }
   }
 
-  if (VT_NORMALISATION)
+  if (VT_NORMALISATION > 0)
   {
-    double min_value = 1.0, max_value = 0.0;
+    double avg_value = 0;
 
-    for (unsigned int i=0; i < current_view.size(); i++)
+    for (unsigned int i = 0; i < current_view.size(); i++)
     {
-      if (current_view[i] > max_value)
-        max_value = current_view[i];
-
-      if (current_view[i] < min_value)
-        min_value = current_view[i];
+      avg_value += current_view[i];
     }
-    for (unsigned int i=0; i < current_view.size(); i++)
+
+    avg_value /= current_view.size();
+
+    for (unsigned int i = 0; i < current_view.size(); i++)
     {
-      current_view[i] = (current_view[i] - min_value) * 1.0 / (max_value - min_value);
+      current_view[i] = std::max(0.0, std::min(current_view[i] * VT_NORMALISATION / avg_value, 1.0));
     }
   }
 

@@ -158,7 +158,7 @@ private:
   int TEMPLATE_Y_SIZE;
   int VT_PATCH_NORMALISATION;
   double VT_MIN_PATCH_NORMALISATION_STD;
-  bool VT_NORMALISATION;
+  double VT_NORMALISATION;
 
   std::vector<VisualTemplate> templates;
   std::vector<double> current_view;

@@ -300,13 +300,13 @@ bool ExperienceMap::calculate_path_to_goal(double time_s)
   {
     if (goal_timeout_s != 0 && time_s > goal_timeout_s)
     {
-      cout << "Timed out reaching goal ... sigh" << endl;
+//      cout << "Timed out reaching goal ... sigh" << endl;
       goal_success = false;
     }
     if (exp_euclidean_m(&experiences[current_exp_id], &experiences[goal_list[0]]) < 0.1)
     {
       goal_success = true;
-      cout << "Goal reached ... yay!" << endl;
+ //     cout << "Goal reached ... yay!" << endl;
     }
     goal_list.pop_front();
     goal_timeout_s = 0;
@@ -388,7 +388,7 @@ bool ExperienceMap::calculate_path_to_goal(double time_s)
     // means we need a new time out
     if (goal_timeout_s == 0)
     {
-      goal_timeout_s = time_s + min(20.0 + experiences[goal_list[0]].time_from_current_s * 3.0, 1.0 * 60.0);
+      goal_timeout_s = time_s + experiences[goal_list[0]].time_from_current_s;
       cout << "Goal timeout in " << goal_timeout_s - time_s << "s" << endl;
     }
   }
@@ -461,9 +461,6 @@ double ExperienceMap::get_subgoal_m() const
 
 double ExperienceMap::get_subgoal_rad() const
 {
-//	if (waypoint_exp_id != -1)
-//		cout << "curr (" <<experiences[current_exp_id].x_m << "," << experiences[current_exp_id].y_m<< ") way (" << experiences[waypoint_exp_id].x_m<< "," <<experiences[waypoint_exp_id].y_m << ")" << endl;
-
   if (waypoint_exp_id == -1)
     return 0;
   else

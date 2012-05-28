@@ -40,8 +40,10 @@ rosmake
 ==Running RatSLAM==
 
 To use one of our pre-packaged bag files, download the bag file for either:
- * [http://www.qut.com/irat iRat dataset]
- * [http://www.qut.com/stlucia St Lucia dataset]
+ * the iRat, a small robot platform
+ * St Lucia, a camera mounted on a car
+
+both are available [https://wiki.qut.edu.au/display/cyphy/OpenRatSLAM+datasets here]
 
 and place the dataset in the ratslam_ros directory.
 

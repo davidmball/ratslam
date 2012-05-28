@@ -45,9 +45,11 @@ To use one of our pre-packaged bag files, download the bag file for either:
 
 and place the dataset in the ratslam_ros directory.
 
-Run the dataset and RatSLAM by typing 
+Run the dataset and RatSLAM by typing either
 {{{
-roslaunch launch_<dataset>.launch
+roslaunch irataus.launch
 }}}
-
-where <dataset> is either stlucia or irataus.
+or
+{{{
+roslaunch stlucia.launch
+}}}

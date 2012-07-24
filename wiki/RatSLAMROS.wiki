@@ -1,11 +1,11 @@
 #labels RatSLAM,ROS
-The ROS version of RatSLAM is intended for publication in **. It has been designed as a more modular version consisting of 3 individual nodes.
+The ROS version of RatSLAM is intended for publication in a special open-source issue of Autonomous Robots. It has been designed as a more modular version than the other library in this project - the algorithm has been divided into 3 individual ROS nodes.
 
-This version of ROS was based on the RatSLAM C++ library written by David Ball and Scott Heath, with 
-
-For a full description of ROS terminology have a look [http://www.ros.org here]. 
+This version of RatSLAM was based on the RatSLAM C++ library written by David Ball and Scott Heath, with support and additions by Michael Milford. The RatSLAM algorithm was originally designed and implemented by Michael Milford and Gordon Wyeth.
 
 The ROS version of RatSLAM has only been tested on Ubuntu and as ROS support for platforms other than Linux is still limited, this will probably not change.
+
+For a full description of ROS terminology have a look [http://www.ros.org here]. 
 
 ==Dependencies==
 

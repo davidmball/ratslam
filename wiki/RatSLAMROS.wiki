@@ -50,8 +50,10 @@ and place the dataset in the ratslam_ros directory.
 Run the dataset and RatSLAM by typing either
 {{{
 roslaunch irataus.launch
+rosbag play irat_aus_28112011.bag
 }}}
 or
 {{{
 roslaunch stlucia.launch
+rosbag play stlucia_2007.bag
 }}}

@@ -29,9 +29,9 @@
 #pragma warning( disable: 4251 ) // problem between std::vector and log4cxx
 #endif
 
-#ifdef RATSLAM_EXPORTS
+#if defined RATSLAM_EXPORTS && defined WIN32
 #define RATSLAM_API __declspec(dllexport)
-#elif defined RATSLAM_IMPORTS
+#elif defined RATSLAM_IMPORTS && defined WIN32
 #define RATSLAM_API __declspec(dllimport)
 #else
 #define RATSLAM_API

@@ -60,8 +60,8 @@ rosbag play stlucia_2007.bag
 
 ===Using Custom Bag Files===
 
-Bag files (or real robots) must provide at least images for RatSLAM on topics /<topic_root>/camera/image [sensor_msgs::Image] or /topic_root/camera/image/compressed [sensor_msgs::CompressedImage] (refer to [ROS image transport http://www.ros.org/wiki/image_transport]). 
-Odometry may also be provided on topic /<topic_root>/odom [nav_msgs::Odometry], or can be estimated using visual flow from the image data.
+Bag files (or real robots) must provide at least images for RatSLAM on topics /`<`topic_root`>`/camera/image `[sensor_msgs::Image]` or /`<`topic_root`>`/camera/image/compressed `[sensor_msgs::CompressedImage]` (refer to [ROS image transport http://www.ros.org/wiki/image_transport]). 
+Odometry may also be provided on topic /`<`topic_root`>`/odom `[nav_msgs::Odometry]`, or can be estimated using visual flow from the image data.
 Aside from the bag file, two other files are required: a config file and a launch file. An example config file is shown below (used for the St. Lucia data set):
 {{{
 [general]
@@ -114,3 +114,5 @@ posecells_size=250
 media_path=../src/media
 image_file=irat_sm.tga
 }}}
+
+The topic_root in a config file may be set to any value as long as it matches the `<`topic_root`>` paths specified in the bag file. The config file also contains RatSLAM options, visual odometry options and drawing options.

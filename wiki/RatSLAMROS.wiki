@@ -58,7 +58,7 @@ roslaunch stlucia.launch
 rosbag play stlucia_2007.bag
 }}}
 
-===Using Custom Bag Files===
+===Using Custom Bag Files (or Real Robots)===
 
 Bag files (or real robots) must provide at least images for RatSLAM on topics /`<`topic_root`>`/camera/image `[sensor_msgs::Image]` or /`<`topic_root`>`/camera/image/compressed `[sensor_msgs::CompressedImage]` (refer to [ROS image transport http://www.ros.org/wiki/image_transport]). 
 Odometry may also be provided on topic /`<`topic_root`>`/odom `[nav_msgs::Odometry]`, or can be estimated using visual flow from the image data.
@@ -116,3 +116,21 @@ image_file=irat_sm.tga
 }}}
 
 The topic_root in a config file may be set to any value as long as it matches the `<`topic_root`>` paths specified in the bag file. The config file also contains RatSLAM options, visual odometry options and drawing options.
+
+The launch file specifies which nodes of RatSLAM should be run and which config file to use. An example launch file is shown below(also used for the St. Lucia dataset):
+{{{
+
+<launch>
+
+	<machine name="local_alt" address="localhost" default="true" />
+	
+	<node name="RatSLAMLocalViewCells" pkg="ratslam_ros" type="ratslam_lv" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMPoseCells" pkg="ratslam_ros" type="ratslam_pc" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMExperienceMap" pkg="ratslam_ros" type="ratslam_em" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
+	
+	<node pkg="rxtools" type="rxplot" name="plot_vt_em" args="-b -1 -p 500 -r 1 -m . /stlucia/LocalView/Template/current_id,/stlucia/PoseCell/TopologicalAction/dest_id" />
+	<node pkg="rosbag" type="record" name="record" args="/stlucia/ExperienceMap/Map /stlucia/ExperienceMap/RobotPose /stlucia/LocalView/Template /stlucia/PoseCell/TopologicalAction -O ratslam_out.bag" />
+
+</launch>
+}}}

@@ -223,6 +223,18 @@ roslaunch <my_robot>.launch
 rosbag play <my_robot>.bag
 }}}
 
+*Using rviz*
+
+The map created by OpenRatSLAM will be periodically published to rviz. To run rviz:
+{{{
+rosrun rviz rviz
+}}}
+
+Click on the "Add" button down the bottom left of the window.
+Choose "MarkerArray" from the list.
+In the field "Marker Array Topic" on the left, click on the button with 3 dots. Choose the topic `<`my_robot`>`/ExperienceMap/MapMarker
+
+
 ===Tuning parameters===
 
 Open the created config file

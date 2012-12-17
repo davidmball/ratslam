@@ -147,7 +147,7 @@ needs to be commented out if providing odometry.
 
 Start recording.
 {{{
-rosrecord -O <my_robot.bag> <my_robot>/camera/images <my_robot>/odom
+rosrecord -O <my_robot>.bag <my_robot>/camera/images <my_robot>/odom
 }}}
 (see [http://www.ros.org/wiki/rosbag/Commandline] for more detail)
 
@@ -161,7 +161,7 @@ In a terminal type
 
 {{{
 cd ratslam_ros
-cp config/stlucia.cfg config/<my_robot>.cfg
+cp config/config_stlucia.txt config/config_<my_robot>.txt
 }}}
 
 *Creating a new launch file*
@@ -173,4 +173,22 @@ cp stlucia.launch <my_robot>.launch
 gedit <my_robot>.launch
 }}}
 
+Replace all references to "../config/config_stlucia.txt" with "../config/config_`<`my_robot`>`.txt"
 
+Comment out the visual odometry node to prevent it from running.
+Replace
+{{{
+<node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
+}}}
+
+with 
+{{{
+<!-- <node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />-->
+}}}
+
+*Running your dataset*
+
+Your dataset can now be run the same way is the provided datsets:
+{{{
+roslaunch <my_robot>.launch
+}}}

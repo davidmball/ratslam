@@ -231,7 +231,7 @@ rosrun rviz rviz
 }}}
 
 Click on the "Add" button down the bottom left of the window.
-Choose "MarkerArray" from the list.
+Choose `"MarkerArray"` from the list.
 In the field "Marker Array Topic" on the left, click on the button with 3 dots. Choose the topic `<my_robot>/ExperienceMap/MapMarker`
 
 

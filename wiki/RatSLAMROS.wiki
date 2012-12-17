@@ -1,51 +1,55 @@
 #labels RatSLAM,ROS
-The ROS version of RatSLAM has been designed as a more modular version than the other library in this project - the algorithm has been divided into 3 individual RatSLAM ROS nodes and one visual odometry node.
+The ROS version of RatSLAM has been designed as a more modular version than the other library in this project - the algorithm has been divided into 3 individual RatSLAM ROS nodes and one visual odometry node. This version is referred to as OpenRatSLAM.
 
-This version of RatSLAM was based on the RatSLAM C++ library written by David Ball and Scott Heath, with support and additions by Michael Milford. The RatSLAM algorithm was originally designed and implemented by Michael Milford and Gordon Wyeth.
+OpenRatSLAM is based on the RatSLAM C++ library written by David Ball and Scott Heath, with support and additions by Michael Milford. The RatSLAM algorithm was originally designed and implemented by Michael Milford and Gordon Wyeth.
 
-The ROS version of RatSLAM has only been tested on Ubuntu and as ROS support for platforms other than Linux is still limited, this will probably not change.
+OpenRatSLAM has only been tested on Ubuntu and as ROS support for platforms other than Linux is still limited, this will probably not change.
 
 For a full description of ROS terminology have a look [http://www.ros.org here]. 
 
 ==Dependencies==
 
-The ROS version of RatSLAM depends on ROS dependencies:
+OpenRatSLAM depends on ROS packages:
 opencv2 and topological_nav_msgs
-and also on [http://irrlicht.sourceforge.net Irrlicht]
-Irrlicht may be installed on Ubuntu with apt-get
+and also on 3D graphics library [http://irrlicht.sourceforge.net Irrlicht]
+Irrlicht can be installed on Ubuntu with apt-get
 {{{
 sudo apt-get install libirrlicht-dev
 }}}
 
 ==Build Instructions==
 
-Checkout the source from svn:
+Checkout the source from SVN:
 
 {{{
 svn checkout http://ratslam.googlecode.com/svn/branches/ratslam_ros ratslam_ros
 }}}
 
-Setup ROS environment variables by typing something like:
+Setup ROS environment variables by typing:
 {{{
-. /opt/ros/diamondback/setup.sh
+. /opt/ros/fuerte/setup.sh
 }}}
 
-Make sure ratslam_ros is in a directory on the environment variable ROS_PACKAGE_PATH
+The OpenRatSLAM directory needs to be added to the environment variable ROS_PACKAGE_PATH.
+{{{
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/path/to/OpenRatSLAM
+}}}
 
-Then build ratslam_ros with
+Then build OpenRatSLAM with
 {{{
 rosmake
 }}}
 
 ==Running RatSLAM==
 
-To use one of our pre-packaged bag files, download the bag file for either:
+To use one of the provided pre-packaged bag files, download the bag file for either:
  * iRat in Aus
  * Car in St Lucia
+ * Oxford new college dataset
 
-both are available [https://wiki.qut.edu.au/display/cyphy/OpenRatSLAM+datasets here]
+all are available [https://wiki.qut.edu.au/display/cyphy/OpenRatSLAM+datasets here]
 
-and place the dataset in the ratslam_ros directory.
+and place the dataset in the OpenRatSLAM directory.
 
 Run the dataset and RatSLAM by typing either
 {{{
@@ -56,6 +60,11 @@ or
 {{{
 roslaunch stlucia.launch
 rosbag play stlucia_2007.bag
+}}}
+or
+{{{
+roslaunch oxford_newcollege.launch
+rosbag play oxford_newcollege.bag
 }}}
 
 ===Using Custom Bag Files (or Real Robots)===

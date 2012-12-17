@@ -193,17 +193,17 @@ cp stlucia.launch <my_robot>.launch
 gedit <my_robot>.launch
 }}}
 
-Replace all references to "../config/config_stlucia.txt" with "../config/config_`<`my_robot`>`.txt"
+Replace all references to "../config/config_stlucia.txt" with "../config/config`_<`my_robot`>`.txt"
 
 Comment out the visual odometry node to prevent it from running.
 Replace
 {{{
-<node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
+<node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="../config/config_<my_robot>.txt _image_transport:=compressed" cwd="node" required="true" />
 }}}
 
 with 
 {{{
-<!-- <node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />-->
+<!-- <node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="../config/config_<my_robot>.txt _image_transport:=compressed" cwd="node" required="true" />-->
 }}}
 
 *Running your dataset*
@@ -214,9 +214,7 @@ roslaunch <my_robot>.launch
 rosbag play <my_robot>.bag
 }}}
 
-*Tuning the parameters*
-The parameters in the provided config files may work for you ... but they may not.
-
+===Tuning parameters===
 
 Open the created config file
 {{{

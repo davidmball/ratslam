@@ -141,19 +141,29 @@ The config file name must be set to the config file used. The line with:
 }}} 
 needs to be commented out if providing odometry.
 
-=== Step by Step ===
+=== Creating a bag file ===
 
-*Loading the data into a bag file*
+*Loading a dataset into a bag file*
 
-Start recording.
+The easiest way to tune RatSLAM is using an offline dataset. Any robot providing camera images as sensor_msgs/CompressedImage and odometry as nav_msgs/Odometry can be used. The images and odometry must be in the form `<`my_robot`>`/camera/image and `<`my_robot`>`/odom. 
+
+To convert topic names to the correct format run:
 {{{
-rosrecord -O <my_robot>.bag <my_robot>/camera/images <my_robot>/odom
+rostopic echo <path/to/my/robot/camera> | rostopic pub <my_robot>/camera/image sensor_msgs/CompressedImage &
+rostopic echo <path/to/my/robot/odom> | rostopic pub <my_robot>/odom nav_msgs/Odometry &
 }}}
-(see [http://www.ros.org/wiki/rosbag/Commandline] for more detail)
 
-Start a robot moving!
+Start recording into a bag file:
+{{{
+rosbag record -O <my_robot>.bag <my_robot>/camera/image <my_robot>/odom
+}}}
 
-Press Ctrl-C at the terminal to finish recording.
+Start the robot and collect the dataset. Press Ctrl-C at the terminal to finish recording.
+
+
+===Running the bag file===
+
+To run a custom bag file, a new config file and launch file are required.
 
 *Creating a new config file*
 
@@ -162,6 +172,16 @@ In a terminal type
 {{{
 cd ratslam_ros
 cp config/config_stlucia.txt config/config_<my_robot>.txt
+gedit config/config_<my_robot>.txt
+}}}
+
+Change the first line
+{{{
+topic_root=stlucia
+}}}
+to 
+{{{
+topic_root=<my_robot>
 }}}
 
 *Creating a new launch file*

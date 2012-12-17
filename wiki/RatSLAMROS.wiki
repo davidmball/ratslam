@@ -67,9 +67,9 @@ roslaunch oxford_newcollege.launch
 rosbag play oxford_newcollege.bag
 }}}
 
-===Using Custom Bag Files (or Real Robots)===
+==Using Custom Bag Files (or Real Robots)==
 
-Bag files (or real robots) must provide at least images for RatSLAM on topics /`<`topic_root`>`/camera/image `[sensor_msgs::Image]` or /`<`topic_root`>`/camera/image/compressed `[sensor_msgs::CompressedImage]` (refer to [ROS image transport http://www.ros.org/wiki/image_transport]). 
+Bag files (or real robots) must provide at least images for RatSLAM on topics /`<`topic_root`>`/camera/image `[sensor_msgs::Image]` or /`<`topic_root`>`/camera/image/compressed `[sensor_msgs::CompressedImage]` (refer to [http://www.ros.org/wiki/image_transport ROS image transport]). 
 Odometry may also be provided on topic /`<`topic_root`>`/odom `[nav_msgs::Odometry]`, or can be estimated using visual flow from the image data.
 Aside from the bag file, two other files are required: a config file and a launch file. An example config file is shown below (used for the St. Lucia data set):
 {{{

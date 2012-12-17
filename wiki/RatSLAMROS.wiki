@@ -140,3 +140,37 @@ The config file name must be set to the config file used. The line with:
 	<node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
 }}} 
 needs to be commented out if providing odometry.
+
+=== Step by Step ===
+
+*Loading the data into a bag file*
+
+Start recording.
+{{{
+rosrecord -O <my_robot.bag> <my_robot>/camera/images <my_robot>/odom
+}}}
+(see [http://www.ros.org/wiki/rosbag/Commandline] for more detail)
+
+Start a robot moving!
+
+Press Ctrl-C at the terminal to finish recording.
+
+*Creating a new config file*
+
+In a terminal type
+
+{{{
+cd ratslam_ros
+cp config/stlucia.cfg config/<my_robot>.cfg
+}}}
+
+*Creating a new launch file*
+
+In the same terminal type
+
+{{{
+cp stlucia.launch <my_robot>.launch
+gedit <my_robot>.launch
+}}}
+
+

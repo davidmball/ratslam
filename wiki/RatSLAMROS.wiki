@@ -191,4 +191,16 @@ with
 Your dataset can now be run the same way is the provided datsets:
 {{{
 roslaunch <my_robot>.launch
+rosbag play <my_robot>.bag
 }}}
+
+*Tuning the parameters*
+The parameters in the provided config files may work for you ... but they may not.
+
+
+Open the created config file
+{{{
+gedit config/config_<my_robot>.txt
+}}}
+
+Tweak...

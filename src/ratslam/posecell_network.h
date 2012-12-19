@@ -92,7 +92,7 @@ public:
 
   void on_odo(double vtrans, double vrot, double time_diff_s);
 
-  void on_view_template(unsigned int vt);
+  void on_view_template(unsigned int vt, double vt_rad);
 
   PosecellAction get_action();
 
@@ -120,6 +120,8 @@ public:
   double get_delta_pc(double x, double y, double th);
 
   unsigned int get_current_exp_id() { return current_exp; }
+
+  double get_relative_rad() { return vt_delta_pc_th * 2.0 * M_PI / PC_DIM_TH; }
 
   template<typename Archive>
     void save(Archive& ar, const unsigned int version) const
@@ -236,6 +238,11 @@ private:
   double best_x;
   double best_y;
   double best_th;
+
+  double vt_delta_pc_th;
+
+  bool odo_update;
+  bool vt_update;
 
   Posecell *** posecells;
   Posecell * posecells_memory;

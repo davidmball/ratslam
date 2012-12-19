@@ -1,0 +1,26 @@
+[general]
+topic_root=/newcollege/
+                                                	
+[ratslam]
+vt_match_threshold = 0.054
+template_x_size=60
+template_y_size=10
+vt_panoramic=1
+vt_patch_normalise=2
+
+pc_cell_x_size = 1.0
+pc_dim_xy = 30
+exp_delta_pc_threshold = 2.0
+pc_vt_inject_energy = 0.2
+vt_active_decay = 1.0
+
+exp_loops=100
+
+[draw]
+enable=1
+vt_window_width=640
+vt_window_height=900
+exp_map_size=500
+posecells_size=250
+media_path=../src/media
+image_file=irat_sm.tga

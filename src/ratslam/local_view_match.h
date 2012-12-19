@@ -87,6 +87,11 @@ public:
     return current_vt;
   }
 
+  double get_relative_rad()
+  {
+    return vt_relative_rad;
+  }
+
   template<typename Archive>
     void serialize(Archive& ar, const unsigned int version)
     {
@@ -105,6 +110,7 @@ public:
       ar & VT_PATCH_NORMALISATION;
       ar & VT_MIN_PATCH_NORMALISATION_STD;
       ar & VT_NORMALISATION;
+      ar & VT_PANORAMIC;
 
       ar & templates;
       ar & current_view;
@@ -113,6 +119,7 @@ public:
       ar & current_vt;
       ar & vt_error;
       ar & prev_vt;
+      ar & vt_relative_rad;
 
     }
 
@@ -159,6 +166,7 @@ private:
   int VT_PATCH_NORMALISATION;
   double VT_MIN_PATCH_NORMALISATION_STD;
   double VT_NORMALISATION;
+  int VT_PANORAMIC;
 
   std::vector<VisualTemplate> templates;
   std::vector<double> current_view;
@@ -168,6 +176,7 @@ private:
   double current_mean;
   double vt_error;
   int prev_vt;
+  double vt_relative_rad;
 
   const unsigned char *view_rgb;
   bool greyscale;

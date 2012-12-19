@@ -132,16 +132,16 @@ void action_callback(ratslam_ros::TopologicalActionConstPtr action, ratslam::Exp
   {
     case ratslam_ros::TopologicalAction::CREATE_NODE:
       em->on_create_experience(action->dest_id);
-      em->on_set_experience(action->dest_id);
+      em->on_set_experience(action->dest_id, 0);
       break;
 
     case ratslam_ros::TopologicalAction::CREATE_EDGE:
-      em->on_create_link(action->src_id, action->dest_id);
-      em->on_set_experience(action->dest_id);
+      em->on_create_link(action->src_id, action->dest_id, action->relative_rad);
+      em->on_set_experience(action->dest_id, action->relative_rad);
       break;
 
     case ratslam_ros::TopologicalAction::SET_NODE:
-      em->on_set_experience(action->dest_id);
+      em->on_set_experience(action->dest_id, action->relative_rad);
       break;
 
   }

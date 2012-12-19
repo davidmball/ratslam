@@ -258,24 +258,25 @@ public:
       map->experiences[exp].th_rad += 2 * M_PI;
     }
 
-    double facing_ratio = tan(map->experiences[exp].th_rad);
+	double agent_rad = map->experiences[exp].th_rad + map->relative_rad;
+    double facing_ratio = tan(agent_rad);
 
-    if (map->experiences[exp].th_rad > 0 && map->experiences[exp].th_rad < M_PI_2)
+    if (agent_rad > 0 && agent_rad < M_PI_2)
     {
       irat_node->setRotation(
           irr::core::vector3df(0, 0, (irr::f32)(atan2(facing_ratio * viewport_height, viewport_width) * 180 / M_PI)));
     }
-    else if (map->experiences[exp].th_rad > M_PI_2 && map->experiences[exp].th_rad < M_PI)
+    else if (agent_rad > M_PI_2 && agent_rad < M_PI)
     {
       irat_node->setRotation(
           irr::core::vector3df(0, 0, (irr::f32)(atan2(-facing_ratio * viewport_height, -viewport_width) * 180 / M_PI)));
     }
-    else if (map->experiences[exp].th_rad < 0 && map->experiences[exp].th_rad > -M_PI_2)
+    else if (agent_rad < 0 && agent_rad > -M_PI_2)
     {
       irat_node->setRotation(
           irr::core::vector3df(0, 0, (irr::f32)(atan2(facing_ratio * viewport_height, viewport_width) * 180 / M_PI)));
     }
-    else if (map->experiences[exp].th_rad < -M_PI_2 && map->experiences[exp].th_rad > -M_PI)
+    else if (agent_rad < -M_PI_2 && agent_rad > -M_PI)
     {
       irat_node->setRotation(
           irr::core::vector3df(0, 0, (irr::f32)(atan2(-facing_ratio * viewport_height, -viewport_width) * 180 / M_PI)));

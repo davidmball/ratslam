@@ -59,6 +59,8 @@ ExperienceMap::ExperienceMap(ptree settings)
   accum_delta_y = 0;
   accum_delta_time_s = 0;
 
+  relative_rad = 0;
+
 }
 
 ExperienceMap::~ExperienceMap()
@@ -91,10 +93,8 @@ int ExperienceMap::on_create_experience(unsigned int exp_id)
   new_exp->goal_to_current = -1;
   new_exp->current_to_goal = -1;
 
-  double time_diff_s = 1/10;
-
   if (experiences.size() != 1)
-    on_create_link(get_current_id(), experiences.size() - 1);
+    on_create_link(get_current_id(), experiences.size() - 1, 0);
 
   return experiences.size() - 1;
 }
@@ -164,7 +164,7 @@ bool ExperienceMap::iterate()
 }
 
 // create a link between two experiences
-bool ExperienceMap::on_create_link(int exp_id_from, int exp_id_to)
+bool ExperienceMap::on_create_link(int exp_id_from, int exp_id_to, double rel_rad)
 {
   Experience * current_exp = &experiences[exp_id_from];
 
@@ -175,6 +175,12 @@ bool ExperienceMap::on_create_link(int exp_id_from, int exp_id_to)
       return false;
   }
 
+  for (unsigned int i = 0; i < experiences[exp_id_to].links_from.size(); i++)
+  {
+    if (links[experiences[exp_id_to].links_from[i]].exp_to_id == exp_id_from)
+      return false;
+  }
+
   links.resize(links.size() + 1);
   Link * new_link = &(*(links.end() - 1));
 
@@ -182,7 +188,7 @@ bool ExperienceMap::on_create_link(int exp_id_from, int exp_id_to)
   new_link->exp_from_id = exp_id_from;
   new_link->d = sqrt(accum_delta_x * accum_delta_x + accum_delta_y * accum_delta_y);
   new_link->heading_rad = get_signed_delta_rad(current_exp->th_rad, atan2(accum_delta_y, accum_delta_x));
-  new_link->facing_rad = get_signed_delta_rad(current_exp->th_rad, accum_delta_facing);
+  new_link->facing_rad = get_signed_delta_rad(current_exp->th_rad, clip_rad_180(accum_delta_facing + rel_rad));
   new_link->delta_time_s = accum_delta_time_s;
 
   // add this link to the 'to exp' so we can go backwards through the em
@@ -193,7 +199,7 @@ bool ExperienceMap::on_create_link(int exp_id_from, int exp_id_to)
 }
 
 // change the current experience
-int ExperienceMap::on_set_experience(int new_exp_id)
+int ExperienceMap::on_set_experience(int new_exp_id, double rel_rad)
 {
   if (new_exp_id > experiences.size() - 1)
     return 0;
@@ -207,7 +213,9 @@ int ExperienceMap::on_set_experience(int new_exp_id)
   current_exp_id = new_exp_id;
   accum_delta_x = 0;
   accum_delta_y = 0;
-  accum_delta_facing = experiences[current_exp_id].th_rad;
+  accum_delta_facing = clip_rad_180(experiences[current_exp_id].th_rad + rel_rad);
+
+  relative_rad = rel_rad;
 
   return 1;
 }
@@ -282,6 +290,9 @@ double ExperienceMap::dijkstra_distance_between_experiences(int id1, int id2)
       return exp->time_from_current_s;
     }
   }
+
+  // DB added to stop warning
+  return DBL_MAX;
 }
 
 // return true if path to goal found

@@ -126,7 +126,7 @@ public:
 
   // create a new experience for a given position
   int on_create_experience(unsigned int exp_id);
-  bool on_create_link(int exp_id_from, int exp_id_to);
+  bool on_create_link(int exp_id_from, int exp_id_to, double rel_rad);
 
   Experience *get_experience(int id)
   {
@@ -145,7 +145,7 @@ public:
   bool iterate();
 
   // change the current experience
-  int on_set_experience(int new_exp_id);
+  int on_set_experience(int new_exp_id, double rel_rad);
 
   int get_num_experiences()
   {
@@ -223,7 +223,8 @@ public:
       ar & goal_success;
       ar & goal_timeout_s;
       ar & goal_path_final_exp_id;
-
+  	  
+      ar & relative_rad;
 
     }
 
@@ -254,6 +255,8 @@ private:
   double accum_delta_x;
   double accum_delta_y;
   double accum_delta_time_s;
+
+  double relative_rad;
 
   int waypoint_exp_id;
   bool goal_success;

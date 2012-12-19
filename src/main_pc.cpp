@@ -68,6 +68,7 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::PosecellNetwork *pc, 
       pc_output.header.stamp = ros::Time::now();
       pc_output.header.seq++;
       pc_output.dest_id = pc->get_current_exp_id();
+	  pc_output.relative_rad = pc->get_relative_rad();
       pub_pc->publish(pc_output);
       ROS_DEBUG_STREAM("PC:action_publish{odo}{" << ros::Time::now() << "} action{" << pc_output.header.seq << "}=" <<  pc_output.action << " src=" << pc_output.src_id << " dest=" << pc_output.dest_id);
     }
@@ -86,9 +87,9 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::PosecellNetwork *pc, 
 
 void template_callback(ratslam_ros::ViewTemplateConstPtr vt, ratslam::PosecellNetwork *pc, ros::Publisher * pub_pc)
 {
-  ROS_DEBUG_STREAM("PC:vt_callback{" << ros::Time::now() << "} seq=" << vt->header.seq << " id=" << vt->current_id);
+  ROS_DEBUG_STREAM("PC:vt_callback{" << ros::Time::now() << "} seq=" << vt->header.seq << " id=" << vt->current_id << " rad=" << vt->relative_rad);
 
-  pc->on_view_template(vt->current_id);
+  pc->on_view_template(vt->current_id, vt->relative_rad);
 
 #ifdef HAVE_IRRLICHT
 	if (use_graphics)

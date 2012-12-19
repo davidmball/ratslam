@@ -69,6 +69,9 @@ PosecellNetwork::PosecellNetwork(ptree settings)
 
   pose_cell_builder();
 
+  odo_update = false;
+  vt_update = false;
+
 }
 
 void PosecellNetwork::pose_cell_builder()
@@ -672,7 +675,12 @@ bool PosecellNetwork::set_cells(double * cells)
 
 double PosecellNetwork::get_delta_pc(double x, double y, double th)
 {
-  return sqrt(pow(get_min_delta(best_x, x, PC_DIM_XY), 2) + pow(get_min_delta(best_y, y, PC_DIM_XY), 2) + pow(get_min_delta(best_th, th, PC_DIM_TH), 2));
+  double pc_th_corrected = best_th - vt_delta_pc_th;
+  if (pc_th_corrected < 0) 
+	pc_th_corrected = PC_DIM_TH + pc_th_corrected;
+  if (pc_th_corrected >= PC_DIM_TH)
+	pc_th_corrected = pc_th_corrected - PC_DIM_TH;
+  return sqrt(pow(get_min_delta(best_x, x, PC_DIM_XY), 2) + pow(get_min_delta(best_y, y, PC_DIM_XY), 2) + pow(get_min_delta(pc_th_corrected, th, PC_DIM_TH), 2));
 }
 
 double PosecellNetwork::get_min_delta(double d1, double d2, double max)
@@ -890,12 +898,20 @@ void PosecellNetwork::create_experience()
 }
 
 
-
 PosecellNetwork::PosecellAction PosecellNetwork::get_action()
 {
   PosecellExperience * experience;
   double delta_pc;
   PosecellAction action = NO_ACTION;
+
+  if (odo_update && vt_update)
+  {
+    odo_update = false;
+    vt_update = false;
+
+  } else {
+	return action;
+  }
 
   if (visual_templates.size() == 0)
   {
@@ -989,7 +1005,7 @@ void PosecellNetwork::on_odo(double vtrans, double vrot, double time_diff_s)
   normalise();
   path_integration(vtrans, vrot);
   find_best();
-
+  odo_update = true;
 }
 
 void PosecellNetwork::create_view_template()
@@ -1004,7 +1020,7 @@ void PosecellNetwork::create_view_template()
 
 }
 
-void PosecellNetwork::on_view_template(unsigned int vt)
+void PosecellNetwork::on_view_template(unsigned int vt, double vt_rad)
 {
   PosecellVisualTemplate * pcvt;
   if (vt >= visual_templates.size())
@@ -1031,7 +1047,13 @@ void PosecellNetwork::on_view_template(unsigned int vt)
       double energy = PC_VT_INJECT_ENERGY * 1.0 / 30.0 * (30.0 - exp(1.2 * pcvt->decay));
       if (energy > 0)
       {
-        inject((int)pcvt->pc_x, (int)pcvt->pc_y, (int)pcvt->pc_th, energy);
+		vt_delta_pc_th = vt_rad / (2.0*M_PI) * PC_DIM_TH;
+		double pc_th_corrected = pcvt->pc_th + vt_rad / (2.0*M_PI) * PC_DIM_TH;
+		if (pc_th_corrected < 0) 
+			pc_th_corrected = PC_DIM_TH + pc_th_corrected;
+		if (pc_th_corrected >= PC_DIM_TH)
+			pc_th_corrected = pc_th_corrected - PC_DIM_TH;
+        inject((int)pcvt->pc_x, (int)pcvt->pc_y, (int)pc_th_corrected, energy);
       }
     }
   }
@@ -1045,6 +1067,8 @@ void PosecellNetwork::on_view_template(unsigned int vt)
 
   prev_vt = current_vt;
   current_vt = vt;
+
+vt_update = true;
 }
 
 } // namespace ratslam

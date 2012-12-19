@@ -10,3 +10,5 @@ uint32 action
 uint32 src_id
 uint32 dest_id
 
+float64 relative_rad
+

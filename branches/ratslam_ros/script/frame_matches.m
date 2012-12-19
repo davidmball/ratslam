@@ -53,7 +53,8 @@ end
 pair_match = pair_match + frame_offset;
 
 % mov = mmreader('E:\datasets\car_driving\stlucia_large\stluciahq.avi');
-mov = mmreader('E:\datasets\iRat\aus_map\log_irat_red.avi');
+% mov = mmreader('E:\datasets\iRat\aus_map\log_irat_red.avi');
+mov = mmreader('newcollege_pano.avi');
 num_frames = get(mov, 'numberOfFrames');
 fh = get(mov, 'Height');
 fw = get(mov, 'Width');
@@ -64,7 +65,7 @@ npmatches = npmatches(1);
 
 length(pair_match)
 
-for i = 1200:length(pair_match)
+for i = 1:length(pair_match)
     im1 = [];
     im2 = [];
     
@@ -98,7 +99,7 @@ for i = 1200:length(pair_match)
     pause(0.01);
     
     
-    framename = sprintf('c:/temp/frames3/frame_%.6d.jpg', i);
+    framename = sprintf('frame_%.6d.jpg', i);
     
     print('-r200', '-djpeg100', framename);
     

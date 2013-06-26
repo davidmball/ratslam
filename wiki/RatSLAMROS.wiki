@@ -19,6 +19,8 @@ sudo apt-get install libirrlicht-dev
 
 ==Build Instructions==
 
+These instructions have last been successfully tested with Ubuntu 12.04 and ROS Groovy.
+
 Checkout the source from SVN:
 
 {{{
@@ -35,6 +37,8 @@ The OpenRatSLAM directory needs to be added to the environment variable ROS_PACK
 export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/path/to/OpenRatSLAM
 }}}
 
+Make sure that you replace the "/path/to/OpenRatSLAM" with the appropriate path for your install of RatSLAM. For example, "~/ratslam_ros"
+
 Then build OpenRatSLAM with
 {{{
 rosmake
@@ -49,7 +53,7 @@ To use one of the provided pre-packaged bag files, download the bag file for eit
 
 all are available [https://wiki.qut.edu.au/display/cyphy/OpenRatSLAM+datasets here]
 
-and place the dataset in the OpenRatSLAM directory.
+and place the dataset in the OpenRatSLAM directory. Note these are moderately large files (~1 Gig).
 
 Run the dataset and RatSLAM by typing either
 {{{
@@ -66,6 +70,8 @@ or
 roslaunch oxford_newcollege.launch
 rosbag play oxford_newcollege.bag
 }}}
+
+Note that after you run the first line, a number of blank windows should pop up. Then after you play back the bagfile (second line), these windows should become populated with useful RatSLAM visualizations.
 
 ==Using Custom Bag Files (or Real Robots)==
 

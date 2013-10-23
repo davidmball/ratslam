@@ -21,27 +21,28 @@ sudo apt-get install libirrlicht-dev
 
 These instructions have last been successfully tested with Ubuntu 12.04 and ROS Groovy.
 
-Checkout the source from SVN:
-
+Setup ROS catkin workspace by typing:
 {{{
+source /opt/ros/groovy/setup.bash
+mkdir ~/catkin_ws/src
+cd ~/catkin_ws/src
+catkin_init_workspace
+cd..
+catkin_make
+source devel/setup.bash
+}}}
+The last command setup your development environment, defining all the needed environment variables. A more detailed description of how to create a catkin workspace can be found [http://wiki.ros.org/catkin/Tutorials/create_a_workspace here].
+
+Checkout the source from SVN into ~/catkin_ws/src:
+{{{
+cd ~/catkin_ws/src
 svn checkout http://ratslam.googlecode.com/svn/branches/ratslam_ros ratslam_ros
 }}}
 
-Setup ROS environment variables by typing:
+Then build OpenRatSLAM:
 {{{
-. /opt/ros/fuerte/setup.sh
-}}}
-
-The OpenRatSLAM directory needs to be added to the environment variable ROS_PACKAGE_PATH.
-{{{
-export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/path/to/OpenRatSLAM
-}}}
-
-Make sure that you replace the "/path/to/OpenRatSLAM" with the appropriate path for your install of RatSLAM. For example, "~/ratslam_ros"
-
-Then build OpenRatSLAM with
-{{{
-rosmake
+cd ~/catkin_ws
+catkin_make
 }}}
 
 ==Running RatSLAM==
@@ -57,17 +58,17 @@ and place the dataset in the OpenRatSLAM directory. Note these are moderately la
 
 Run the dataset and RatSLAM by typing either
 {{{
-roslaunch irataus.launch
+roslaunch ratslam_ros irataus.launch
 rosbag play irat_aus_28112011.bag
 }}}
 or
 {{{
-roslaunch stlucia.launch
+roslaunch ratslam_ros stlucia.launch
 rosbag play stlucia_2007.bag
 }}}
 or
 {{{
-roslaunch oxford_newcollege.launch
+roslaunch ratslam_ros oxford_newcollege.launch
 rosbag play oxford_newcollege.bag
 }}}
 
@@ -139,12 +140,12 @@ The launch file specifies which nodes of RatSLAM should be run and which config 
 
 	<machine name="local_alt" address="localhost" default="true" />
 	
-	<node name="RatSLAMLocalViewCells" pkg="ratslam_ros" type="ratslam_lv" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
-	<node name="RatSLAMPoseCells" pkg="ratslam_ros" type="ratslam_pc" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
-	<node name="RatSLAMExperienceMap" pkg="ratslam_ros" type="ratslam_em" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
-	<node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMLocalViewCells" pkg="ratslam_ros" type="ratslam_lv" args="$(find ratslam_ros)/config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMPoseCells" pkg="ratslam_ros" type="ratslam_pc" args="$(find ratslam_ros)/config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMExperienceMap" pkg="ratslam_ros" type="ratslam_em" args="$(find ratslam_ros)/config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="$(find ratslam_ros)/config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
 	
-	<node pkg="rxtools" type="rxplot" name="plot_vt_em" args="-b -1 -p 500 -r 1 -m . /stlucia/LocalView/Template/current_id,/stlucia/PoseCell/TopologicalAction/dest_id" />
+	<node pkg="rqt_plot" type="rqt_plot" name="plot_vt_em" args="/stlucia/LocalView/Template/current_id,/stlucia/PoseCell/TopologicalAction/dest_id" />
 	<node pkg="rosbag" type="record" name="record" args="/stlucia/ExperienceMap/Map /stlucia/ExperienceMap/RobotPose /stlucia/LocalView/Template /stlucia/PoseCell/TopologicalAction -O ratslam_out.bag" />
 
 </launch>
@@ -152,7 +153,7 @@ The launch file specifies which nodes of RatSLAM should be run and which config 
 
 The config file name must be set to the config file used. The line with:
 {{{
-	<node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="../config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="$(find ratslam_ros)/config/config_stlucia.txt _image_transport:=compressed" cwd="node" required="true" />
 }}} 
 needs to be commented out if providing odometry.
 
@@ -208,17 +209,17 @@ cp stlucia.launch <my_robot>.launch
 gedit <my_robot>.launch
 }}}
 
-Replace all references to "../config/config_stlucia.txt" with "../config/config`_<`my_robot`>`.txt"
+Replace all references to "$(find ratslam_ros)/config/config_stlucia.txt" with "$(find ratslam_ros)/config/config`_<`my_robot`>`.txt"
 
 Comment out the visual odometry node to prevent it from running.
 Replace
 {{{
-<node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="../config/config_<my_robot>.txt _image_transport:=compressed" cwd="node" required="true" />
+<node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="$(find ratslam_ros)/config/config_<my_robot>.txt _image_transport:=compressed" cwd="node" required="true" />
 }}}
 
 with 
 {{{
-<!-- <node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="../config/config_<my_robot>.txt _image_transport:=compressed" cwd="node" required="true" />-->
+<!-- <node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="$(find ratslam_ros)/config/config_<my_robot>.txt _image_transport:=compressed" cwd="node" required="true" />-->
 }}}
 
 *Running your dataset*

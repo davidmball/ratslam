@@ -1,0 +1,13 @@
+
+<launch>
+
+	<machine name="local_alt" address="localhost" default="true" />
+	
+	<node name="RatSLAMLocalViewCells" pkg="ratslam_ros" type="ratslam_lv" args="$(find ratslam_ros)/config/config_oxford_newcollege.txt _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMPoseCells" pkg="ratslam_ros" type="ratslam_pc" args="$(find ratslam_ros)/config/config_oxford_newcollege.txt _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMExperienceMap" pkg="ratslam_ros" type="ratslam_em" args="$(find ratslam_ros)/config/config_oxford_newcollege.txt _image_transport:=compressed" cwd="node" required="true" />
+	
+	<node pkg="rqt_plot" type="rqt_plot" name="plot_vt_em" args="/newcollege/LocalView/Template/current_id,/newcollege/PoseCell/TopologicalAction/dest_id" />
+	<node pkg="rosbag" type="record" name="record" args="/newcollege/ExperienceMap/Map /newcollege/ExperienceMap/RobotPose /newcollege/LocalView/Template /newcollege/PoseCell/TopologicalAction -O newcollege_out.bag" />
+
+</launch>

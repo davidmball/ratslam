@@ -1,0 +1,15 @@
+
+<launch>
+
+	<machine name="local_alt" address="localhost" default="true" />
+	
+	<node name="RatSLAMLocalViewCells" pkg="ratslam_ros" type="ratslam_lv" args="$(find ratslam_ros)/config/config_irataus.txt _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMPoseCells" pkg="ratslam_ros" type="ratslam_pc" args="$(find ratslam_ros)/config/config_irataus.txt _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMExperienceMap" pkg="ratslam_ros" type="ratslam_em" args="$(find ratslam_ros)/config/config_irataus.txt _image_transport:=compressed" cwd="node" required="true" />
+
+	<node pkg="rqt_plot" type="rqt_plot" name="plot_vt_em" args="/irat_red/LocalView/Template/current_id,/irat_red/PoseCell/TopologicalAction/dest_id" />
+	<node pkg="rosbag" type="record" name="record" args="/irat_red/ExperienceMap/Map /irat_red/ExperienceMap/RobotPose /irat_red/LocalView/Template /irat_red/PoseCell/TopologicalAction /overhead/pose -O ratslam_out.bag" />
+
+	<node pkg="image_view" type="image_view" name="overhead" args="image:=/overhead/camera/image _image_transport:=compressed" />
+
+</launch>

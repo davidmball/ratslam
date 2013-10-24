@@ -19,7 +19,7 @@ sudo apt-get install libirrlicht-dev
 
 ==Build Instructions==
 
-These instructions have last been successfully tested with Ubuntu 12.04 and ROS Groovy.
+This instructions describe how to build ratslam_ros with catkin. The old rosbuild version can be found [RatSLAMROS_rosbuild here]. These instructions have last been successfully tested with Ubuntu 12.04 and ROS Groovy.
 
 Setup ROS catkin workspace by typing:
 {{{

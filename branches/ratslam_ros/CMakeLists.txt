@@ -98,6 +98,36 @@ target_link_libraries(ratslam_vo
   ${OPENGL_LIBRARIES}
   ${OpenCV_LIBRARIES})
 
+#config files for devel
+set(MEDIA_PATH ${CMAKE_CURRENT_SOURCE_DIR}/src/media) #devel use the files in the source dir
+file(GLOB infiles "config/*.in")
+foreach(infile ${infiles})
+  #MESSAGE(STATUS "Process file: ${infile}")
+
+  # Generate output file name
+  string(REGEX REPLACE ".in\$" "" outfile "${infile}")
+  get_filename_component(outfile "${outfile}" NAME)
+  set(outfile "${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/config/${outfile}")
+  #MESSAGE(STATUS "Output file: ${outfile}")
+
+  configure_file("${infile}" "${outfile}")
+endforeach()
+
+#config files for install
+set(MEDIA_PATH ${CMAKE_INSTALL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/media) #install use the installed media files
+file(GLOB infiles "config/*.in")
+foreach(infile ${infiles})
+  #MESSAGE(STATUS "Process file: ${infile}")
+
+  # Generate output file name
+  string(REGEX REPLACE ".in\$" "" outfile "${infile}")
+  get_filename_component(outfile "${outfile}" NAME)
+  set(outfile "${CMAKE_CURRENT_BINARY_DIR}/config/${outfile}")
+  #MESSAGE(STATUS "Output file: ${outfile}")
+
+  configure_file("${infile}" "${outfile}")
+endforeach()
+
 install(TARGETS ratslam ratslam_lv ratslam_pc ratslam_em ratslam_vo
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
@@ -105,5 +135,8 @@ install(TARGETS ratslam ratslam_lv ratslam_pc ratslam_em ratslam_vo
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
 
-install(DIRECTORY config/
+install(DIRECTORY src/media/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/media)
+
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/config/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config)

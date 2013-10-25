@@ -22,5 +22,5 @@ vt_window_width=640
 vt_window_height=900
 exp_map_size=500
 posecells_size=250
-media_path=../src/media
+media_path=@MEDIA_PATH@
 image_file=irat_sm.tga

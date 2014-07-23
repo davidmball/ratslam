@@ -128,6 +128,11 @@ foreach(infile ${infiles})
   configure_file("${infile}" "${outfile}")
 endforeach()
 
+add_dependencies(ratslam_lv ratslam_ros_generate_messages_cpp)
+add_dependencies(ratslam_pc ratslam_ros_generate_messages_cpp)
+add_dependencies(ratslam_em ratslam_ros_generate_messages_cpp)
+add_dependencies(ratslam_vo ratslam_ros_generate_messages_cpp)
+
 install(TARGETS ratslam ratslam_lv ratslam_pc ratslam_em ratslam_vo
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

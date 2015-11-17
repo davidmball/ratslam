@@ -15,6 +15,10 @@ Irrlicht can be installed on Ubuntu with apt-get
 ```
 sudo apt-get install libirrlicht-dev
 ```
+OpenRatSLAM currently depends on Ubuntu's OpenCV package. It can also be installed with apt-get
+```
+sudo apt-get install libopencv-dev
+```
 
 ## Build Instructions ##
 
@@ -35,7 +39,12 @@ The last command setup your development environment, defining all the needed env
 Checkout the source from SVN into ~/catkin\_ws/src:
 ```
 cd ~/catkin_ws/src
-svn checkout http://ratslam.googlecode.com/svn/branches/ratslam_ros ratslam_ros
+```
+~~svn checkout http://ratslam.googlecode.com/svn/branches/ratslam_ros ratslam_ros~~
+```
+git clone https://github.com/davidmball/ratslam.git ratslam_ros
+cd ratslam_ros
+git checkout ratslam_ros
 ```
 
 Then build OpenRatSLAM:

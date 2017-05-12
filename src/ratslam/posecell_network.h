@@ -37,11 +37,13 @@
 #define _POSE_CELL_NETWORK_HPP
 
 #define _USE_MATH_DEFINES
+
 #include "math.h"
 
 #include <stdio.h>
 
 #include <boost/property_tree/ini_parser.hpp>
+
 using boost::property_tree::ptree;
 
 typedef double Posecell;
@@ -51,23 +53,20 @@ typedef double Posecell;
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/split_member.hpp>
 
-namespace ratslam
-{
+namespace ratslam {
 
-struct PosecellVisualTemplate
-{
-        unsigned int id;
-        double pc_x, pc_y, pc_th;
-        double decay;
-        std::vector<unsigned int> exps;
+struct PosecellVisualTemplate {
+  unsigned int id;
+  double pc_x, pc_y, pc_th;
+  double decay;
+  std::vector<unsigned int> exps;
 
-        template <typename Archive>
-        void serialize(Archive& ar, const unsigned int version)
-        {
-          ar & id;
-          ar & pc_x & pc_y & pc_th;
-          ar & decay;
-        }
+  template<typename Archive>
+  void serialize(Archive &ar, const unsigned int version) {
+    ar & id;
+    ar & pc_x & pc_y & pc_th;
+    ar & decay;
+  }
 
 };
 
@@ -75,19 +74,27 @@ struct PosecellExperience {
 
   double x_pc, y_pc, th_pc;
   int vt_id;
+
+  template<typename Archive>
+  void serialize(Archive &ar, const unsigned int version) {
+    ar & x_pc & y_pc & th_pc;
+    ar & vt_id;
+  }
 };
 
 
-class PosecellNetwork
-{
+class PosecellNetwork {
 
 public:
 
   friend class PosecellScene;
 
-  enum PosecellAction {NO_ACTION = 0, CREATE_NODE, CREATE_EDGE, SET_NODE};
+  enum PosecellAction {
+    NO_ACTION = 0, CREATE_NODE, CREATE_EDGE, SET_NODE
+  };
 
   PosecellNetwork(ptree settings);
+
   ~PosecellNetwork();
 
   void on_odo(double vtrans, double vrot, double time_diff_s);
@@ -97,22 +104,22 @@ public:
   PosecellAction get_action();
 
   // these updated by find_best()
-  double x()
-  {
+  double x() {
     return best_x;
   }
-  double y()
-  {
+
+  double y() {
     return best_y;
   }
-  double th()
-  {
+
+  double th() {
     return best_th;
   }
 
   // get and set all the cells as one array
-  double * get_cells();
-  bool set_cells(double * cells);
+  double* get_cells();
+
+  bool set_cells(double* cells);
 
 
   // access to some of the constants specified in
@@ -124,63 +131,69 @@ public:
   double get_relative_rad() { return vt_delta_pc_th * 2.0 * M_PI / PC_DIM_TH; }
 
   template<typename Archive>
-    void save(Archive& ar, const unsigned int version) const
-    {
-      ar & PC_DIM_XY;
-      ar & PC_DIM_TH;
-      ar & PC_W_E_DIM;
-      ar & PC_W_I_DIM;
-      ar & PC_W_E_VAR;
-      ar & PC_W_I_VAR;
-      ar & PC_GLOBAL_INHIB;
+  void save(Archive &ar, const unsigned int version) const {
+    ar & PC_DIM_XY;
+    ar & PC_DIM_TH;
+    ar & PC_W_E_DIM;
+    ar & PC_W_I_DIM;
+    ar & PC_W_E_VAR;
+    ar & PC_W_I_VAR;
+    ar & PC_GLOBAL_INHIB;
 
-      ar & VT_ACTIVE_DECAY;
-      ar & PC_VT_RESTORE;
+    ar & VT_ACTIVE_DECAY;
+    ar & PC_VT_RESTORE;
 
-      ar & best_x;
-      ar & best_y;
-      ar & best_th;
+    ar & best_x;
+    ar & best_y;
+    ar & best_th;
 
-      int i, j, k;
-      for (k = 0; k < PC_DIM_TH; k++)
-        for (j = 0; j < PC_DIM_XY; j++)
-          for (i = 0; i < PC_DIM_XY; i++)
-            ar & posecells[k][j][i];
+    ar & visual_templates;
+    ar & experiences;
 
-    }
+    int i, j, k;
+    for (k = 0; k < PC_DIM_TH; k++)
+      for (j = 0; j < PC_DIM_XY; j++)
+        for (i = 0; i < PC_DIM_XY; i++)
+          ar & posecells[k][j][i];
+
+  }
 
   template<typename Archive>
-    void load(Archive& ar, const unsigned int version)
-    {
-      ar & PC_DIM_XY;
-      ar & PC_DIM_TH;
-      ar & PC_W_E_DIM;
-      ar & PC_W_I_DIM;
-      ar & PC_W_E_VAR;
-      ar & PC_W_I_VAR;
-      ar & PC_GLOBAL_INHIB;
+  void load(Archive &ar, const unsigned int version) {
+    ar & PC_DIM_XY;
+    ar & PC_DIM_TH;
+    ar & PC_W_E_DIM;
+    ar & PC_W_I_DIM;
+    ar & PC_W_E_VAR;
+    ar & PC_W_I_VAR;
+    ar & PC_GLOBAL_INHIB;
 
-      ar & VT_ACTIVE_DECAY;
-      ar & PC_VT_RESTORE;
+    ar & VT_ACTIVE_DECAY;
+    ar & PC_VT_RESTORE;
 
-      ar & best_x;
-      ar & best_y;
-      ar & best_th;
+    ar & best_x;
+    ar & best_y;
+    ar & best_th;
 
-      pose_cell_builder();
+    ar & visual_templates;
+    ar & experiences;
 
-      int i, j, k;
-      for (k = 0; k < PC_DIM_TH; k++)
-        for (j = 0; j < PC_DIM_XY; j++)
-          for (i = 0; i < PC_DIM_XY; i++)
-            ar & posecells[k][j][i];
-    }
+    pose_cell_builder();
+
+    int i, j, k;
+    for (k = 0; k < PC_DIM_TH; k++)
+      for (j = 0; j < PC_DIM_XY; j++)
+        for (i = 0; i < PC_DIM_XY; i++)
+          ar & posecells[k][j][i];
+  }
 
   BOOST_SERIALIZATION_SPLIT_MEMBER()
+
 private:
   friend class boost::serialization::access;
 
   void create_experience();
+
   void create_view_template();
 
   // inject energy into a specific point in the network
@@ -189,6 +202,7 @@ private:
   // locally excite and inhibit points. Excite spreads energy and
   // inhibit compresses.
   bool excite();
+
   bool inhibit();
 
   // global inhibition
@@ -205,19 +219,28 @@ private:
   // packet.
   double find_best();
 
-  PosecellNetwork()
-  {
+  PosecellNetwork() {
     ;
   }
-  PosecellNetwork(const PosecellNetwork & other);
-  const PosecellNetwork & operator=(const PosecellNetwork & other);
+
+  PosecellNetwork(const PosecellNetwork &other);
+
+  const PosecellNetwork &operator=(const PosecellNetwork &other);
+
   void pose_cell_builder();
+
   bool pose_cell_excite_helper(int x, int y, int z);
+
   bool pose_cell_inhibit_helper(int x, int y, int z);
-  void circshift2d(double * array, double * array_buffer, int dimx, int dimy, int shiftx, int shifty);
-  int rot90_square(double ** array, int dim, int rot);
-  int generate_wrap(int * wrap, int start1, int end1, int start2, int end2, int start3, int end3);
+
+  void circshift2d(double* array, double* array_buffer, int dimx, int dimy, int shiftx, int shifty);
+
+  int rot90_square(double** array, int dim, int rot);
+
+  int generate_wrap(int* wrap, int start1, int end1, int start2, int end2, int start3, int end3);
+
   double norm2d(double var, int x, int y, int z, int dim_centre);
+
   double get_min_delta(double d1, double d2, double max);
 
   int PC_DIM_XY;
@@ -244,34 +267,34 @@ private:
   bool odo_update;
   bool vt_update;
 
-  Posecell *** posecells;
-  Posecell * posecells_memory;
+  Posecell*** posecells;
+  Posecell* posecells_memory;
   int posecells_memory_size;
   int posecells_elements;
-  Posecell *** pca_new;
-  Posecell * pca_new_memory;
-  Posecell ** pca_new_rot_ptr;
-  Posecell ** pca_new_rot_ptr2;
-  Posecell * posecells_plane_th;
-  double * PC_W_EXCITE;
-  double * PC_W_INHIB;
+  Posecell*** pca_new;
+  Posecell* pca_new_memory;
+  Posecell** pca_new_rot_ptr;
+  Posecell** pca_new_rot_ptr2;
+  Posecell* posecells_plane_th;
+  double* PC_W_EXCITE;
+  double* PC_W_INHIB;
 
   int PC_W_E_DIM_HALF;
   int PC_W_I_DIM_HALF;
 
-  int * PC_E_XY_WRAP;
-  int * PC_E_TH_WRAP;
-  int * PC_I_XY_WRAP;
-  int * PC_I_TH_WRAP;
+  int* PC_E_XY_WRAP;
+  int* PC_E_TH_WRAP;
+  int* PC_I_XY_WRAP;
+  int* PC_I_TH_WRAP;
 
   int PC_CELLS_TO_AVG;
-  int * PC_AVG_XY_WRAP;
-  int * PC_AVG_TH_WRAP;
+  int* PC_AVG_XY_WRAP;
+  int* PC_AVG_TH_WRAP;
 
-  double * PC_XY_SUM_SIN_LOOKUP;
-  double * PC_XY_SUM_COS_LOOKUP;
-  double * PC_TH_SUM_SIN_LOOKUP;
-  double * PC_TH_SUM_COS_LOOKUP;
+  double* PC_XY_SUM_SIN_LOOKUP;
+  double* PC_XY_SUM_COS_LOOKUP;
+  double* PC_TH_SUM_SIN_LOOKUP;
+  double* PC_TH_SUM_COS_LOOKUP;
 
   double PC_C_SIZE_TH;
 

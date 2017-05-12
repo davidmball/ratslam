@@ -29,8 +29,12 @@
 #include "utils/utils.h"
 
 #include <boost/property_tree/ini_parser.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 
 #include <ros/ros.h>
+#include <tf/transform_listener.h>
+#include <tf/transform_broadcaster.h>
 
 #include "ratslam/experience_map.h"
 #include <ratslam_ros/TopologicalAction.h>
@@ -43,25 +47,50 @@
 
 #include <visualization_msgs/Marker.h>
 
+// pubs
 ros::Publisher pub_em;
 ros::Publisher pub_pose;
 ros::Publisher pub_em_markers;
 ros::Publisher pub_goal_path;
+
+// tf
+tf::TransformListener* tf_listener;
+tf::TransformBroadcaster* tf_broadcaster;
+tf::Transform map_to_odom;
+
+// odom
+double odom_pose[3] = { 0.0, 0.0, 0.0 };
+double mpose[3] = { 0.0, 0.0, 0.0 };
+
 geometry_msgs::PoseStamped pose_output;
 ratslam_ros::TopologicalMap em_map;
 visualization_msgs::Marker em_marker;
+ratslam::ExperienceMap* em;
 
 #ifdef HAVE_IRRLICHT
 #include "graphics/experience_map_scene.h"
-ratslam::ExperienceMapScene *ems;
+ratslam::ExperienceMapScene* ems;
 bool use_graphics;
 #endif
 
 using namespace ratslam;
 
-void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::ExperienceMap *em)
-{
-  ROS_DEBUG_STREAM("EM:odo_callback{" << ros::Time::now() << "} seq=" << odo->header.seq << " v=" << odo->twist.twist.linear.x << " r=" << odo->twist.twist.angular.z);
+std::string map_frame = std::string("map");
+std::string odom_frame = std::string("odom");
+std::string base_frame = std::string("base_footprint");
+double tf_update_rate = 20.0;
+double map_save_period = 10.0;
+std::string map_file_path = std::string("ratslam-latest.bmap");
+
+/**
+ * \brief The Odometry callback function.
+ *
+ * \param odo The incoming odometry message.
+ * \param em Pointer to current experience map.
+ */
+void odo_callback(nav_msgs::OdometryConstPtr odo) {
+  ROS_DEBUG_STREAM("EM:odo_callback{" << ros::Time::now() << "} seq=" << odo->header.seq
+                                      << " v=" << odo->twist.twist.linear.x << " r=" << odo->twist.twist.angular.z);
 
   static ros::Time prev_time(0);
 
@@ -76,7 +105,7 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::ExperienceMap *em)
   if (em->get_current_goal_id() >= 0)
   {
     // (prev_goal_update.toSec() == 0 || (odo->header.stamp - prev_goal_update).toSec() > 5)
-    //em->calculate_path_to_goal(odo->header.stamp.toSec());
+    // em->calculate_path_to_goal(odo->header.stamp.toSec());
 
     prev_goal_update = odo->header.stamp;
 
@@ -89,10 +118,10 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::ExperienceMap *em)
 
       static geometry_msgs::PoseStamped pose;
       path.header.stamp = ros::Time::now();
-      path.header.frame_id = "1";
+      path.header.frame_id = map_frame;
 
       pose.header.seq = 0;
-      pose.header.frame_id = "1";
+      pose.header.frame_id = map_frame;
       path.poses.clear();
       unsigned int trace_exp_id = em->get_goals()[0];
       while (trace_exp_id != em->get_goal_path_final_exp())
@@ -108,12 +137,11 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::ExperienceMap *em)
       pub_goal_path.publish(path);
 
       path.header.seq++;
-
     }
     else
     {
       path.header.stamp = ros::Time::now();
-      path.header.frame_id = "1";
+      path.header.frame_id = map_frame;
       path.poses.clear();
       pub_goal_path.publish(path);
 
@@ -124,9 +152,10 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::ExperienceMap *em)
   prev_time = odo->header.stamp;
 }
 
-void action_callback(ratslam_ros::TopologicalActionConstPtr action, ratslam::ExperienceMap *em)
+void action_callback(ratslam_ros::TopologicalActionConstPtr action)
 {
-  ROS_DEBUG_STREAM("EM:action_callback{" << ros::Time::now() << "} action=" << action->action << " src=" << action->src_id << " dst=" << action->dest_id);
+  ROS_DEBUG_STREAM("EM:action_callback{" << ros::Time::now() << "} action=" << action->action
+                                         << " src=" << action->src_id << " dst=" << action->dest_id);
 
   switch (action->action)
   {
@@ -144,13 +173,16 @@ void action_callback(ratslam_ros::TopologicalActionConstPtr action, ratslam::Exp
       em->on_set_experience(action->dest_id, action->relative_rad);
       break;
 
+    default:
+      ROS_WARN("Received invalid action!");
+      break;
   }
 
   em->iterate();
 
   pose_output.header.stamp = ros::Time::now();
   pose_output.header.seq++;
-  pose_output.header.frame_id = "1";
+  pose_output.header.frame_id = map_frame;
   pose_output.pose.position.x = em->get_experience(em->get_current_id())->x_m;
   pose_output.pose.position.y = em->get_experience(em->get_current_id())->y_m;
   pose_output.pose.position.z = 0;
@@ -159,6 +191,10 @@ void action_callback(ratslam_ros::TopologicalActionConstPtr action, ratslam::Exp
   pose_output.pose.orientation.z = sin(em->get_experience(em->get_current_id())->th_rad / 2.0);
   pose_output.pose.orientation.w = cos(em->get_experience(em->get_current_id())->th_rad / 2.0);
   pub_pose.publish(pose_output);
+
+  mpose[0] = em->get_experience(em->get_current_id())->x_m;
+  mpose[1] = em->get_experience(em->get_current_id())->y_m;
+  mpose[2] = em->get_experience(em->get_current_id())->th_rad;
 
   static ros::Time prev_pub_time(0);
 
@@ -200,13 +236,13 @@ void action_callback(ratslam_ros::TopologicalActionConstPtr action, ratslam::Exp
 
   em_marker.header.stamp = ros::Time::now();
   em_marker.header.seq++;
-  em_marker.header.frame_id = "1";
+  em_marker.header.frame_id = map_frame;
   em_marker.type = visualization_msgs::Marker::LINE_LIST;
   em_marker.points.resize(em->get_num_links() * 2);
   em_marker.action = visualization_msgs::Marker::ADD;
   em_marker.scale.x = 0.01;
-  //em_marker.scale.y = 1;
-  //em_marker.scale.z = 1;
+  // em_marker.scale.y = 1;
+  // em_marker.scale.z = 1;
   em_marker.color.a = 1;
   em_marker.ns = "em";
   em_marker.id = 0;
@@ -236,53 +272,131 @@ void action_callback(ratslam_ros::TopologicalActionConstPtr action, ratslam::Exp
 #endif
 }
 
-void set_goal_pose_callback(geometry_msgs::PoseStampedConstPtr pose, ratslam::ExperienceMap * em)
+void set_goal_pose_callback(geometry_msgs::PoseStampedConstPtr pose)
 {
   em->add_goal(pose->pose.position.x, pose->pose.position.y);
-
 }
 
-int main(int argc, char * argv[])
+void tf_update_timer_callback(const ros::TimerEvent& event)
 {
-  ROS_INFO_STREAM(argv[0] << " - openRatSLAM Copyright (C) 2012 David Ball and Scott Heath");
-  ROS_INFO_STREAM("RatSLAM algorithm by Michael Milford and Gordon Wyeth");
-  ROS_INFO_STREAM("Distributed under the GNU GPL v3, see the included license file.");
+  tf::StampedTransform odom_to_base_;
+  try
+  {
+    tf_listener->lookupTransform(odom_frame, base_frame, ros::Time(0), odom_to_base_);
+  }
+  catch (tf::TransformException& e)
+  {
+    ROS_WARN("Failed to compute odom pose. Exception: %s", e.what());
+    return;
+  }
+  tf::Transform odom_to_base = odom_to_base_;
+
+  tf::Transform base_to_map =
+      tf::Transform(tf::createQuaternionFromRPY(0, 0, mpose[2]), tf::Vector3(mpose[0], mpose[1], 0.0)).inverse();
+
+  map_to_odom = (odom_to_base * base_to_map).inverse();
+
+  ros::Time tf_expiration = ros::Time::now() + ros::Duration(0.5);
+  tf_broadcaster->sendTransform(tf::StampedTransform(map_to_odom, tf_expiration, map_frame, odom_frame));
+}
+
+void save_map_timer_callback(const ros::TimerEvent& event)
+{
+  // create and open a character archive for output
+  std::ofstream ofs(map_file_path.c_str());
+
+  // save map to archive file
+  {
+    boost::archive::binary_oarchive binary_archive(ofs);
+    // write class instance to archive
+    binary_archive << *em;
+    // archive and stream closed when destructors are called
+  }
+}
+
+bool load_map(const std::string& file_path)
+{
+  try {
+    // create and open an archive for input
+    std::ifstream ifs(file_path.c_str());
+    boost::archive::binary_iarchive binary_archive(ifs);
+    // read class state from archive
+    binary_archive >> *em;
+    // archive and stream closed when destructors are called
+    return true;
+  } catch (...) {
+    return false;
+  }
+}
+
+int main(int argc, char* argv[])
+{
+  // print info without ROS because it is not initialized yet
+  std::cout << argv[0] << " - openRatSLAM Copyright (C) 2012 David Ball and Scott Heath";
+  std::cout << "RatSLAM algorithm by Michael Milford and Gordon Wyeth";
+  std::cout << "Distributed under the GNU GPL v3, see the included license file.";
 
   if (argc < 2)
   {
-    ROS_FATAL_STREAM("USAGE: " << argv[0] << " <config_file>");
+    std::cout << "USAGE: " << argv[0] << " <config_file>";
     exit(-1);
   }
+
+  // initialize ROS node
+  ros::init(argc, argv, "RatSLAMExperienceMap");
+
   std::string topic_root = "";
   boost::property_tree::ptree settings, general_settings, ratslam_settings;
   read_ini(argv[1], settings);
 
   get_setting_child(ratslam_settings, settings, "ratslam", true);
   get_setting_child(general_settings, settings, "general", true);
-  get_setting_from_ptree(topic_root, general_settings, "topic_root", (std::string)"");
+  get_setting_from_ptree(topic_root, general_settings, "topic_root", (std::string) "");
 
-  if (!ros::isInitialized())
-  {
-    ros::init(argc, argv, "RatSLAMExperienceMap");
-  }
   ros::NodeHandle node;
+  ros::NodeHandle priv_node("~");
 
-  ratslam::ExperienceMap * em = new ratslam::ExperienceMap(ratslam_settings);
+  // setup tf
+  tf::TransformListener tf_listener_;
+  tf::TransformBroadcaster tf_broadcaster_;
+  tf_listener = &tf_listener_;
+  tf_broadcaster = &tf_broadcaster_;
 
+  // params
+  priv_node.param("map_frame", map_frame, map_frame);
+  priv_node.param("odom_frame", odom_frame, odom_frame);
+  priv_node.param("base_frame", base_frame, base_frame);
+  priv_node.param("tf_update_rate", tf_update_rate, tf_update_rate);
+  priv_node.param("map_save_period", map_save_period, map_save_period);
+  priv_node.param("map_file_path", map_file_path, map_file_path);
+
+  // create the experience map object
+  em = new ratslam::ExperienceMap(ratslam_settings);
+
+  // try to load map
+  if (!load_map(map_file_path)) {
+    ROS_WARN("Could not load map from file \"%s\"", map_file_path.c_str());
+  }
+
+  // pubs
   pub_em = node.advertise<ratslam_ros::TopologicalMap>(topic_root + "/ExperienceMap/Map", 1);
   pub_em_markers = node.advertise<visualization_msgs::Marker>(topic_root + "/ExperienceMap/MapMarker", 1);
-
   pub_pose = node.advertise<geometry_msgs::PoseStamped>(topic_root + "/ExperienceMap/RobotPose", 1);
-
   pub_goal_path = node.advertise<nav_msgs::Path>(topic_root + "/ExperienceMap/PathToGoal", 1);
 
-  ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>(topic_root + "/odom", 0, boost::bind(odo_callback, _1, em), ros::VoidConstPtr(),
-                                                                    ros::TransportHints().tcpNoDelay());
-  ros::Subscriber sub_action = node.subscribe<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction", 0, boost::bind(action_callback, _1, em),
-                                                                              ros::VoidConstPtr(), ros::TransportHints().tcpNoDelay());
+  // subs
+  ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>(
+    "odom", 0, odo_callback, ros::VoidConstPtr(), ros::TransportHints().tcpNoDelay());
+  ros::Subscriber sub_action = node.subscribe<ratslam_ros::TopologicalAction>(
+    topic_root + "/PoseCell/TopologicalAction", 0, action_callback, ros::VoidConstPtr(),
+    ros::TransportHints().tcpNoDelay());
+  ros::Subscriber sub_goal = node.subscribe<geometry_msgs::PoseStamped>(
+    topic_root + "/ExperienceMap/SetGoalPose", 0, set_goal_pose_callback, ros::VoidConstPtr(),
+    ros::TransportHints().tcpNoDelay());
 
-  ros::Subscriber sub_goal = node.subscribe<geometry_msgs::PoseStamped>(topic_root + "/ExperienceMap/SetGoalPose", 0, boost::bind(set_goal_pose_callback, _1, em),
-                                                                        ros::VoidConstPtr(), ros::TransportHints().tcpNoDelay());
+  // timers
+  ros::Timer tf_update_timer = priv_node.createTimer(ros::Duration(1.0 / tf_update_rate), tf_update_timer_callback);
+  ros::Timer save_map_timer = priv_node.createTimer(ros::Duration(map_save_period), save_map_timer_callback);
 
 #ifdef HAVE_IRRLICHT
   boost::property_tree::ptree draw_settings;
@@ -298,4 +412,3 @@ int main(int argc, char * argv[])
 
   return 0;
 }
-

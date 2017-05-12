@@ -43,9 +43,11 @@
 #include <fstream>
 
 #define _USE_MATH_DEFINES
+
 #include "math.h"
 
 #include <boost/property_tree/ini_parser.hpp>
+
 using boost::property_tree::ptree;
 
 #include <boost/serialization/access.hpp>
@@ -54,21 +56,19 @@ using boost::property_tree::ptree;
 
 namespace ratslam
 {
-
 struct VisualTemplate
 {
   unsigned int id;
   std::vector<double> data;
   double mean;
 
-  template<typename Archive>
-    void serialize(Archive& ar, const unsigned int version)
-    {
-      ar & id;
-      ar & data;
-      ar & mean;
-    }
-
+  template <typename Archive>
+  void serialize(Archive &ar, const unsigned int version)
+  {
+    ar &id;
+    ar &data;
+    ar &mean;
+  }
 };
 
 class LocalViewMatch
@@ -92,36 +92,35 @@ public:
     return vt_relative_rad;
   }
 
-  template<typename Archive>
-    void serialize(Archive& ar, const unsigned int version)
-    {
-      ar & VT_SHIFT_MATCH;
-      ar & VT_STEP_MATCH;
-      ar & VT_MATCH_THRESHOLD;
-      ar & TEMPLATE_SIZE;
-      ar & IMAGE_WIDTH;
-      ar & IMAGE_HEIGHT;
-      ar & IMAGE_VT_X_RANGE_MIN;
-      ar & IMAGE_VT_X_RANGE_MAX;
-      ar & IMAGE_VT_Y_RANGE_MIN;
-      ar & IMAGE_VT_Y_RANGE_MAX;
-      ar & TEMPLATE_X_SIZE;
-      ar & TEMPLATE_Y_SIZE;
-      ar & VT_PATCH_NORMALISATION;
-      ar & VT_MIN_PATCH_NORMALISATION_STD;
-      ar & VT_NORMALISATION;
-      ar & VT_PANORAMIC;
+  template <typename Archive>
+  void serialize(Archive &ar, const unsigned int version)
+  {
+    ar &VT_SHIFT_MATCH;
+    ar &VT_STEP_MATCH;
+    ar &VT_MATCH_THRESHOLD;
+    ar &TEMPLATE_SIZE;
+    ar &IMAGE_WIDTH;
+    ar &IMAGE_HEIGHT;
+    ar &IMAGE_VT_X_RANGE_MIN;
+    ar &IMAGE_VT_X_RANGE_MAX;
+    ar &IMAGE_VT_Y_RANGE_MIN;
+    ar &IMAGE_VT_Y_RANGE_MAX;
+    ar &TEMPLATE_X_SIZE;
+    ar &TEMPLATE_Y_SIZE;
+    ar &VT_PATCH_NORMALISATION;
+    ar &VT_MIN_PATCH_NORMALISATION_STD;
+    ar &VT_NORMALISATION;
+    ar &VT_PANORAMIC;
 
-      ar & templates;
-      ar & current_view;
-      ar & current_mean;
-      ar & image_size;
-      ar & current_vt;
-      ar & vt_error;
-      ar & prev_vt;
-      ar & vt_relative_rad;
-
-    }
+    ar &templates;
+    ar &current_view;
+    ar &current_mean;
+    ar &image_size;
+    ar &current_vt;
+    ar &vt_error;
+    ar &prev_vt;
+    ar &vt_relative_rad;
+  }
 
 private:
   friend class boost::serialization::access;
@@ -130,6 +129,7 @@ private:
   {
     ;
   }
+
   void clip_view_x_y(int &x, int &y);
 
   // create and add a visual template to the collection
@@ -180,9 +180,8 @@ private:
 
   const unsigned char *view_rgb;
   bool greyscale;
-
 };
 
-} // namespace ratslam
+}  // namespace ratslam
 
-#endif // _VISUAL_TEMPLATE_MATCH_H_
+#endif  // _VISUAL_TEMPLATE_MATCH_H_

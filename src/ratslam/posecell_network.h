@@ -53,44 +53,48 @@ typedef double Posecell;
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/split_member.hpp>
 
-namespace ratslam {
-
-struct PosecellVisualTemplate {
+namespace ratslam
+{
+struct PosecellVisualTemplate
+{
   unsigned int id;
   double pc_x, pc_y, pc_th;
   double decay;
   std::vector<unsigned int> exps;
 
-  template<typename Archive>
-  void serialize(Archive &ar, const unsigned int version) {
-    ar & id;
-    ar & pc_x & pc_y & pc_th;
-    ar & decay;
+  template <typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    ar& id;
+    ar& pc_x& pc_y& pc_th;
+    ar& decay;
   }
-
 };
 
-struct PosecellExperience {
-
+struct PosecellExperience
+{
   double x_pc, y_pc, th_pc;
   int vt_id;
 
-  template<typename Archive>
-  void serialize(Archive &ar, const unsigned int version) {
-    ar & x_pc & y_pc & th_pc;
-    ar & vt_id;
+  template <typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    ar& x_pc& y_pc& th_pc;
+    ar& vt_id;
   }
 };
 
-
-class PosecellNetwork {
-
+class PosecellNetwork
+{
 public:
-
   friend class PosecellScene;
 
-  enum PosecellAction {
-    NO_ACTION = 0, CREATE_NODE, CREATE_EDGE, SET_NODE
+  enum PosecellAction
+  {
+    NO_ACTION = 0,
+    CREATE_NODE,
+    CREATE_EDGE,
+    SET_NODE
   };
 
   PosecellNetwork(ptree settings);
@@ -104,15 +108,18 @@ public:
   PosecellAction get_action();
 
   // these updated by find_best()
-  double x() {
+  double x()
+  {
     return best_x;
   }
 
-  double y() {
+  double y()
+  {
     return best_y;
   }
 
-  double th() {
+  double th()
+  {
     return best_th;
   }
 
@@ -121,62 +128,68 @@ public:
 
   bool set_cells(double* cells);
 
-
   // access to some of the constants specified in
   // RatSLAM properties.
   double get_delta_pc(double x, double y, double th);
 
-  unsigned int get_current_exp_id() { return current_exp; }
+  unsigned int get_current_exp_id()
+  {
+    return current_exp;
+  }
 
-  double get_relative_rad() { return vt_delta_pc_th * 2.0 * M_PI / PC_DIM_TH; }
+  double get_relative_rad()
+  {
+    return vt_delta_pc_th * 2.0 * M_PI / PC_DIM_TH;
+  }
 
-  template<typename Archive>
-  void save(Archive &ar, const unsigned int version) const {
-    ar & PC_DIM_XY;
-    ar & PC_DIM_TH;
-    ar & PC_W_E_DIM;
-    ar & PC_W_I_DIM;
-    ar & PC_W_E_VAR;
-    ar & PC_W_I_VAR;
-    ar & PC_GLOBAL_INHIB;
+  template <typename Archive>
+  void save(Archive& ar, const unsigned int version) const
+  {
+    ar& PC_DIM_XY;
+    ar& PC_DIM_TH;
+    ar& PC_W_E_DIM;
+    ar& PC_W_I_DIM;
+    ar& PC_W_E_VAR;
+    ar& PC_W_I_VAR;
+    ar& PC_GLOBAL_INHIB;
 
-    ar & VT_ACTIVE_DECAY;
-    ar & PC_VT_RESTORE;
+    ar& VT_ACTIVE_DECAY;
+    ar& PC_VT_RESTORE;
 
-    ar & best_x;
-    ar & best_y;
-    ar & best_th;
+    ar& best_x;
+    ar& best_y;
+    ar& best_th;
 
-    ar & visual_templates;
-    ar & experiences;
+    ar& visual_templates;
+    ar& experiences;
 
     int i, j, k;
     for (k = 0; k < PC_DIM_TH; k++)
       for (j = 0; j < PC_DIM_XY; j++)
         for (i = 0; i < PC_DIM_XY; i++)
-          ar & posecells[k][j][i];
-
+          ar& posecells[k][j][i];
   }
 
-  template<typename Archive>
-  void load(Archive &ar, const unsigned int version) {
-    ar & PC_DIM_XY;
-    ar & PC_DIM_TH;
-    ar & PC_W_E_DIM;
-    ar & PC_W_I_DIM;
-    ar & PC_W_E_VAR;
-    ar & PC_W_I_VAR;
-    ar & PC_GLOBAL_INHIB;
+  template <typename Archive>
+  void load(Archive& ar, const unsigned int version)
+  {
+    ar& PC_DIM_XY;
+    ar& PC_DIM_TH;
+    ar& PC_W_E_DIM;
+    ar& PC_W_I_DIM;
+    ar& PC_W_E_VAR;
+    ar& PC_W_I_VAR;
+    ar& PC_GLOBAL_INHIB;
 
-    ar & VT_ACTIVE_DECAY;
-    ar & PC_VT_RESTORE;
+    ar& VT_ACTIVE_DECAY;
+    ar& PC_VT_RESTORE;
 
-    ar & best_x;
-    ar & best_y;
-    ar & best_th;
+    ar& best_x;
+    ar& best_y;
+    ar& best_th;
 
-    ar & visual_templates;
-    ar & experiences;
+    ar& visual_templates;
+    ar& experiences;
 
     pose_cell_builder();
 
@@ -184,7 +197,7 @@ public:
     for (k = 0; k < PC_DIM_TH; k++)
       for (j = 0; j < PC_DIM_XY; j++)
         for (i = 0; i < PC_DIM_XY; i++)
-          ar & posecells[k][j][i];
+          ar& posecells[k][j][i];
   }
 
   BOOST_SERIALIZATION_SPLIT_MEMBER()
@@ -219,13 +232,14 @@ private:
   // packet.
   double find_best();
 
-  PosecellNetwork() {
+  PosecellNetwork()
+  {
     ;
   }
 
-  PosecellNetwork(const PosecellNetwork &other);
+  PosecellNetwork(const PosecellNetwork& other);
 
-  const PosecellNetwork &operator=(const PosecellNetwork &other);
+  const PosecellNetwork& operator=(const PosecellNetwork& other);
 
   void pose_cell_builder();
 
@@ -303,9 +317,7 @@ private:
 
   unsigned int current_vt, prev_vt;
   unsigned int current_exp, prev_exp;
-
 };
-
 }
 
-#endif // _POSE_CELL_NETWORK_HPP
+#endif  // _POSE_CELL_NETWORK_HPP

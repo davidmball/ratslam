@@ -38,7 +38,6 @@ using namespace std;
 
 namespace ratslam
 {
-
 PosecellNetwork::PosecellNetwork(ptree settings)
 {
   /*
@@ -71,7 +70,6 @@ PosecellNetwork::PosecellNetwork(ptree settings)
 
   odo_update = false;
   vt_update = false;
-
 }
 
 void PosecellNetwork::pose_cell_builder()
@@ -85,22 +83,22 @@ void PosecellNetwork::pose_cell_builder()
   posecells_elements = PC_DIM_XY * PC_DIM_XY * PC_DIM_TH;
 
   // allocate the memory
-  posecells_memory = (Posecell *)malloc((size_t)posecells_memory_size);
-  pca_new_memory = (Posecell *)malloc((size_t)posecells_memory_size);
+  posecells_memory = (Posecell*)malloc((size_t)posecells_memory_size);
+  pca_new_memory = (Posecell*)malloc((size_t)posecells_memory_size);
 
   // zero all the memory
   memset(posecells_memory, 0, (size_t)posecells_memory_size);
   memset(pca_new_memory, 0, (size_t)posecells_memory_size);
 
   // allocate first level pointers
-  posecells = (Posecell ***)malloc(sizeof(Posecell**) * PC_DIM_TH);
-  pca_new = (Posecell ***)malloc(sizeof(Posecell**) * PC_DIM_TH);
+  posecells = (Posecell***)malloc(sizeof(Posecell**) * PC_DIM_TH);
+  pca_new = (Posecell***)malloc(sizeof(Posecell**) * PC_DIM_TH);
 
   for (i = 0; i < PC_DIM_TH; i++)
   {
     // allocate second level pointers
-    posecells[i] = (Posecell **)malloc(sizeof(Posecell*) * PC_DIM_XY);
-    pca_new[i] = (Posecell **)malloc(sizeof(Posecell*) * PC_DIM_XY);
+    posecells[i] = (Posecell**)malloc(sizeof(Posecell*) * PC_DIM_XY);
+    pca_new[i] = (Posecell**)malloc(sizeof(Posecell*) * PC_DIM_XY);
 
     for (j = 0; j < PC_DIM_XY; j++)
     {
@@ -111,18 +109,18 @@ void PosecellNetwork::pose_cell_builder()
   }
 
   // for path integration
-  pca_new_rot_ptr = (Posecell **)malloc(sizeof(Posecell*) * (PC_DIM_XY + 2));
-  pca_new_rot_ptr2 = (Posecell **)malloc(sizeof(Posecell*) * (PC_DIM_XY + 2));
+  pca_new_rot_ptr = (Posecell**)malloc(sizeof(Posecell*) * (PC_DIM_XY + 2));
+  pca_new_rot_ptr2 = (Posecell**)malloc(sizeof(Posecell*) * (PC_DIM_XY + 2));
   for (i = 0; i < PC_DIM_XY + 2; i++)
   {
     pca_new_rot_ptr[i] = &pca_new_memory[(i * (PC_DIM_XY + 2))];
     pca_new_rot_ptr2[i] = &pca_new_memory[(PC_DIM_XY + 2) * (PC_DIM_XY + 2) + (i * (PC_DIM_XY + 2))];
   }
 
-  posecells_plane_th = (Posecell *)malloc(sizeof(Posecell) * (PC_DIM_XY + 2) * (PC_DIM_XY + 2));
+  posecells_plane_th = (Posecell*)malloc(sizeof(Posecell) * (PC_DIM_XY + 2) * (PC_DIM_XY + 2));
 
-  PC_W_EXCITE = (double *)malloc(sizeof(double) * PC_W_E_DIM * PC_W_E_DIM * PC_W_E_DIM);
-  PC_W_INHIB = (double *)malloc(sizeof(double) * PC_W_I_DIM * PC_W_I_DIM * PC_W_I_DIM);
+  PC_W_EXCITE = (double*)malloc(sizeof(double) * PC_W_E_DIM * PC_W_E_DIM * PC_W_E_DIM);
+  PC_W_INHIB = (double*)malloc(sizeof(double) * PC_W_I_DIM * PC_W_I_DIM * PC_W_I_DIM);
 
   posecells[(int)best_th][(int)best_y][(int)best_x] = 1;
 
@@ -130,10 +128,10 @@ void PosecellNetwork::pose_cell_builder()
   PC_W_E_DIM_HALF = (int)floor((double)PC_W_E_DIM / 2.0);
   PC_W_I_DIM_HALF = (int)floor((double)PC_W_I_DIM / 2.0);
 
-  PC_E_XY_WRAP = (int *)malloc((PC_DIM_XY + PC_W_E_DIM - 1) * sizeof(int));
-  PC_E_TH_WRAP = (int *)malloc((PC_DIM_TH + PC_W_E_DIM - 1) * sizeof(int));
-  PC_I_XY_WRAP = (int *)malloc((PC_DIM_XY + PC_W_I_DIM - 1) * sizeof(int));
-  PC_I_TH_WRAP = (int *)malloc((PC_DIM_TH + PC_W_I_DIM - 1) * sizeof(int));
+  PC_E_XY_WRAP = (int*)malloc((PC_DIM_XY + PC_W_E_DIM - 1) * sizeof(int));
+  PC_E_TH_WRAP = (int*)malloc((PC_DIM_TH + PC_W_E_DIM - 1) * sizeof(int));
+  PC_I_XY_WRAP = (int*)malloc((PC_DIM_XY + PC_W_I_DIM - 1) * sizeof(int));
+  PC_I_TH_WRAP = (int*)malloc((PC_DIM_TH + PC_W_I_DIM - 1) * sizeof(int));
 
   generate_wrap(PC_E_XY_WRAP, PC_DIM_XY - PC_W_E_DIM_HALF, PC_DIM_XY, 0, PC_DIM_XY, 0, PC_W_E_DIM_HALF);
   generate_wrap(PC_E_TH_WRAP, PC_DIM_TH - PC_W_E_DIM_HALF, PC_DIM_TH, 0, PC_DIM_TH, 0, PC_W_E_DIM_HALF);
@@ -141,17 +139,17 @@ void PosecellNetwork::pose_cell_builder()
   generate_wrap(PC_I_TH_WRAP, PC_DIM_TH - PC_W_I_DIM_HALF, PC_DIM_TH, 0, PC_DIM_TH, 0, PC_W_I_DIM_HALF);
 
   PC_CELLS_TO_AVG = 3;
-  PC_AVG_XY_WRAP = (int *)malloc((PC_DIM_XY + 2 * PC_CELLS_TO_AVG) * sizeof(int));
-  PC_AVG_TH_WRAP = (int *)malloc((PC_DIM_TH + 2 * PC_CELLS_TO_AVG) * sizeof(int));
+  PC_AVG_XY_WRAP = (int*)malloc((PC_DIM_XY + 2 * PC_CELLS_TO_AVG) * sizeof(int));
+  PC_AVG_TH_WRAP = (int*)malloc((PC_DIM_TH + 2 * PC_CELLS_TO_AVG) * sizeof(int));
 
   generate_wrap(PC_AVG_XY_WRAP, PC_DIM_XY - PC_CELLS_TO_AVG, PC_DIM_XY, 0, PC_DIM_XY, 0, PC_CELLS_TO_AVG);
   generate_wrap(PC_AVG_TH_WRAP, PC_DIM_TH - PC_CELLS_TO_AVG, PC_DIM_TH, 0, PC_DIM_TH, 0, PC_CELLS_TO_AVG);
 
   // sine and cosine lookups
-  PC_XY_SUM_SIN_LOOKUP = (double *)malloc(PC_DIM_XY * sizeof(double));
-  PC_XY_SUM_COS_LOOKUP = (double *)malloc(PC_DIM_XY * sizeof(double));
-  PC_TH_SUM_SIN_LOOKUP = (double *)malloc(PC_DIM_TH * sizeof(double));
-  PC_TH_SUM_COS_LOOKUP = (double *)malloc(PC_DIM_TH * sizeof(double));
+  PC_XY_SUM_SIN_LOOKUP = (double*)malloc(PC_DIM_XY * sizeof(double));
+  PC_XY_SUM_COS_LOOKUP = (double*)malloc(PC_DIM_XY * sizeof(double));
+  PC_TH_SUM_SIN_LOOKUP = (double*)malloc(PC_DIM_TH * sizeof(double));
+  PC_TH_SUM_COS_LOOKUP = (double*)malloc(PC_DIM_TH * sizeof(double));
 
   for (i = 0; i < PC_DIM_XY; i++)
   {
@@ -239,7 +237,6 @@ PosecellNetwork::~PosecellNetwork()
 
 bool PosecellNetwork::inject(int act_x, int act_y, int act_z, double energy)
 {
-
   if (act_x < PC_DIM_XY && act_x >= 0 && act_y < PC_DIM_XY && act_y >= 0 && act_z < PC_DIM_TH && act_z >= 0)
     posecells[act_z][act_y][act_x] += energy;
 
@@ -272,7 +269,6 @@ bool PosecellNetwork::excite(void)
   //  pc.Posecells = pca_new;
   memcpy(posecells_memory, pca_new_memory, posecells_memory_size);
   return true;
-
 }
 
 bool PosecellNetwork::inhibit(void)
@@ -338,12 +334,11 @@ bool PosecellNetwork::normalise(void)
   for (i = 0; i < posecells_elements; i++)
   {
     posecells_memory[i] /= total;
-    //assert(posecells_memory[i] >= 0);
-    //assert(!isnan(posecells_memory[i]));
+    // assert(posecells_memory[i] >= 0);
+    // assert(!isnan(posecells_memory[i]));
   }
 
   return true;
-
 }
 
 bool PosecellNetwork::path_integration(double vtrans, double vrot)
@@ -363,7 +358,6 @@ bool PosecellNetwork::path_integration(double vtrans, double vrot)
   // for dir_pc=1:PARAMS.PC_DIM_TH
   for (dir_pc = 0; dir_pc < PC_DIM_TH; dir_pc++)
   {
-
     // % radians
     // dir = (dir_pc - 1) * pc.PC_C_SIZE_TH;
     double dir = dir_pc * PC_C_SIZE_TH + angle_to_add;
@@ -400,11 +394,11 @@ bool PosecellNetwork::path_integration(double vtrans, double vrot)
     weight_sw = vtrans * vtrans * cos(dir90) * sin(dir90);
 
     // weight_se = vtrans*sin(dir90) - vtrans^2 *cos(dir90) * sin(dir90);
-    weight_se = //vtrans*sin(dir90) - vtrans*vtrans*cos(dir90)*sin(dir90);
+    weight_se =  // vtrans*sin(dir90) - vtrans*vtrans*cos(dir90)*sin(dir90);
         vtrans * sin(dir90) * (1.0 - vtrans * cos(dir90));
 
     // weight_nw = vtrans*cos(dir90) - vtrans^2 *cos(dir90) * sin(dir90);
-    weight_nw = // vtrans*cos(dir90) - vtrans*vtrans*cos(dir90)*sin(dir90);
+    weight_nw =  // vtrans*cos(dir90) - vtrans*vtrans*cos(dir90)*sin(dir90);
         vtrans * cos(dir90) * (1.0 - vtrans * sin(dir90));
 
     // weight_ne = 1.0 - weight_sw - weight_se - weight_nw;
@@ -413,30 +407,36 @@ bool PosecellNetwork::path_integration(double vtrans, double vrot)
     /* if (weight_sw < 0 || weight_se < 0 || weight_nw < 0 || weight_ne < 0)
      {
      printf("WARNING: weights are negative, vtrans(%f) is either negative or too big\n", vtrans);
-     printf("WARNING: continuing, but expect possible failures soon! Update POSECELL_VTRANS_SCALING to fix this.\n", vtrans);
+     printf("WARNING: continuing, but expect possible failures soon! Update POSECELL_VTRANS_SCALING to fix this.\n",
+     vtrans);
      }*/
 
     // % circular shift and multiple by the contributing weight
     // % copy those shifted elements for the wrap around
-    // pca_new = pca_new.*weight_ne + [pca_new(:,end) pca_new(:,1:end-1)].*weight_nw + [pca_new(end,:); pca_new(1:end-1,:)].*weight_se + circshift(pca_new, [1 1]).*weight_sw;
+    // pca_new = pca_new.*weight_ne + [pca_new(:,end) pca_new(:,1:end-1)].*weight_nw + [pca_new(end,:);
+    // pca_new(1:end-1,:)].*weight_se + circshift(pca_new, [1 1]).*weight_sw;
     // first element
-    pca_new_rot_ptr2[0][0] = pca_new_rot_ptr[0][0] * weight_ne + pca_new_rot_ptr[0][PC_DIM_XY + 1] * weight_se + pca_new_rot_ptr[PC_DIM_XY + 1][0] * weight_nw;
+    pca_new_rot_ptr2[0][0] = pca_new_rot_ptr[0][0] * weight_ne + pca_new_rot_ptr[0][PC_DIM_XY + 1] * weight_se +
+                             pca_new_rot_ptr[PC_DIM_XY + 1][0] * weight_nw;
 
     // first row
     for (i = 1; i < PC_DIM_XY + 2; i++)
     {
-      pca_new_rot_ptr2[0][i] = pca_new_rot_ptr[0][i] * weight_ne + pca_new_rot_ptr[0][i - 1] * weight_se + pca_new_rot_ptr[PC_DIM_XY + 1][i] * weight_nw;
+      pca_new_rot_ptr2[0][i] = pca_new_rot_ptr[0][i] * weight_ne + pca_new_rot_ptr[0][i - 1] * weight_se +
+                               pca_new_rot_ptr[PC_DIM_XY + 1][i] * weight_nw;
     }
 
     for (j = 1; j < PC_DIM_XY + 2; j++)
     {
       // first column
-      pca_new_rot_ptr2[j][0] = pca_new_rot_ptr[j][0] * weight_ne + pca_new_rot_ptr[j][PC_DIM_XY + 1] * weight_se + pca_new_rot_ptr[j - 1][0] * weight_nw;
+      pca_new_rot_ptr2[j][0] = pca_new_rot_ptr[j][0] * weight_ne + pca_new_rot_ptr[j][PC_DIM_XY + 1] * weight_se +
+                               pca_new_rot_ptr[j - 1][0] * weight_nw;
 
       // all the rest
       for (i = 1; i < PC_DIM_XY + 2; i++)
       {
-        pca_new_rot_ptr2[j][i] = pca_new_rot_ptr[j][i] * weight_ne + pca_new_rot_ptr[j][i - 1] * weight_se + pca_new_rot_ptr[j - 1][i] * weight_nw;
+        pca_new_rot_ptr2[j][i] = pca_new_rot_ptr[j][i] * weight_ne + pca_new_rot_ptr[j][i - 1] * weight_se +
+                                 pca_new_rot_ptr[j - 1][i] * weight_nw;
       }
     }
 
@@ -474,7 +474,7 @@ bool PosecellNetwork::path_integration(double vtrans, double vrot)
     // % unrotate the pose cell xy layer
     // pc.Posecells(:,:,dir_pc) = rot90(pca90, 4 - floor(dir * 2/pi));
     rot90_square(posecells[dir_pc], PC_DIM_XY, 4 - (int)floor(dir * 2.0 / M_PI));
-    //end
+    // end
 
     // end
   }
@@ -538,7 +538,6 @@ bool PosecellNetwork::path_integration(double vtrans, double vrot)
           // assert(posecells[k][j][i] >= 0);
         }
       }
-
     }
     // end
   }
@@ -551,7 +550,7 @@ double PosecellNetwork::find_best()
   int i, j, k;
   double x = -1, y = -1, th = -1;
 
-  double * x_sums, *y_sums, *z_sums;
+  double* x_sums, *y_sums, *z_sums;
   double sum_x1, sum_x2, sum_y1, sum_y2;
 
   // % find the max activated cell
@@ -660,12 +659,12 @@ double PosecellNetwork::find_best()
   return max;
 }
 
-double * PosecellNetwork::get_cells(void)
+double* PosecellNetwork::get_cells(void)
 {
   return posecells_memory;
 }
 
-bool PosecellNetwork::set_cells(double * cells)
+bool PosecellNetwork::set_cells(double* cells)
 {
   if (memcpy(posecells_memory, cells, posecells_memory_size) != NULL)
     return true;
@@ -676,11 +675,12 @@ bool PosecellNetwork::set_cells(double * cells)
 double PosecellNetwork::get_delta_pc(double x, double y, double th)
 {
   double pc_th_corrected = best_th - vt_delta_pc_th;
-  if (pc_th_corrected < 0) 
-	pc_th_corrected = PC_DIM_TH + pc_th_corrected;
+  if (pc_th_corrected < 0)
+    pc_th_corrected = PC_DIM_TH + pc_th_corrected;
   if (pc_th_corrected >= PC_DIM_TH)
-	pc_th_corrected = pc_th_corrected - PC_DIM_TH;
-  return sqrt(pow(get_min_delta(best_x, x, PC_DIM_XY), 2) + pow(get_min_delta(best_y, y, PC_DIM_XY), 2) + pow(get_min_delta(pc_th_corrected, th, PC_DIM_TH), 2));
+    pc_th_corrected = pc_th_corrected - PC_DIM_TH;
+  return sqrt(pow(get_min_delta(best_x, x, PC_DIM_XY), 2) + pow(get_min_delta(best_y, y, PC_DIM_XY), 2) +
+              pow(get_min_delta(pc_th_corrected, th, PC_DIM_TH), 2));
 }
 
 double PosecellNetwork::get_min_delta(double d1, double d2, double max)
@@ -740,7 +740,7 @@ bool PosecellNetwork::pose_cell_inhibit_helper(int x, int y, int z)
   return true;
 }
 
-void PosecellNetwork::circshift2d(double * array, double * array_buffer, int dimx, int dimy, int shiftx, int shifty)
+void PosecellNetwork::circshift2d(double* array, double* array_buffer, int dimx, int dimy, int shiftx, int shifty)
 {
   if (shifty == 0)
   {
@@ -786,7 +786,7 @@ void PosecellNetwork::circshift2d(double * array, double * array_buffer, int dim
   }
 }
 
-int PosecellNetwork::rot90_square(double ** array, int dim, int rot)
+int PosecellNetwork::rot90_square(double** array, int dim, int rot)
 {
   double centre = (double)(dim - 1) / 2.0f;
 
@@ -824,7 +824,7 @@ int PosecellNetwork::rot90_square(double ** array, int dim, int rot)
       d = 0;
       break;
     default:
-	return 1;
+      return 1;
   }
 
   if (rot % 2 == 1)
@@ -840,8 +840,8 @@ int PosecellNetwork::rot90_square(double ** array, int dim, int rot)
         {
           is1 = id;
           js1 = jd;
-          id = (int)(a * ((float)(is1) - centre) + b * ((float)(js1) - centre) + centre);
-          jd = (int)(c * ((float)(is1) - centre) + d * ((float)(js1) - centre) + centre);
+          id = (int)(a * ((float)(is1)-centre) + b * ((float)(js1)-centre) + centre);
+          jd = (int)(c * ((float)(is1)-centre) + d * ((float)(js1)-centre) + centre);
           tmp_new = array[jd][id];
           array[jd][id] = tmp_old;
           tmp_old = tmp_new;
@@ -857,7 +857,7 @@ int PosecellNetwork::rot90_square(double ** array, int dim, int rot)
   return true;
 }
 
-int PosecellNetwork::generate_wrap(int * wrap, int start1, int end1, int start2, int end2, int start3, int end3)
+int PosecellNetwork::generate_wrap(int* wrap, int start1, int end1, int start2, int end2, int start3, int end3)
 {
   int i, j;
   i = 0;
@@ -880,16 +880,18 @@ int PosecellNetwork::generate_wrap(int * wrap, int start1, int end1, int start2,
 
 double PosecellNetwork::norm2d(double var, int x, int y, int z, int dim_centre)
 {
-  return 1.0 / (var * sqrt(2.0 * M_PI))
-      * exp((-(x - dim_centre) * (x - dim_centre) - (y - dim_centre) * (y - dim_centre) - (z - dim_centre) * (z - dim_centre)) / (2.0 * var * var));
+  return 1.0 / (var * sqrt(2.0 * M_PI)) *
+         exp((-(x - dim_centre) * (x - dim_centre) - (y - dim_centre) * (y - dim_centre) -
+              (z - dim_centre) * (z - dim_centre)) /
+             (2.0 * var * var));
 }
 
 void PosecellNetwork::create_experience()
 {
-  PosecellVisualTemplate * pcvt = &visual_templates[current_vt];
+  PosecellVisualTemplate* pcvt = &visual_templates[current_vt];
   experiences.resize(experiences.size() + 1);
   current_exp = experiences.size() - 1;
-  PosecellExperience * exp = &experiences[current_exp];
+  PosecellExperience* exp = &experiences[current_exp];
   exp->x_pc = x();
   exp->y_pc = y();
   exp->th_pc = th();
@@ -897,10 +899,9 @@ void PosecellNetwork::create_experience()
   pcvt->exps.push_back(current_exp);
 }
 
-
 PosecellNetwork::PosecellAction PosecellNetwork::get_action()
 {
-  PosecellExperience * experience;
+  PosecellExperience* experience;
   double delta_pc;
   PosecellAction action = NO_ACTION;
 
@@ -908,9 +909,10 @@ PosecellNetwork::PosecellAction PosecellNetwork::get_action()
   {
     odo_update = false;
     vt_update = false;
-
-  } else {
-	return action;
+  }
+  else
+  {
+    return action;
   }
 
   if (visual_templates.size() == 0)
@@ -923,17 +925,19 @@ PosecellNetwork::PosecellAction PosecellNetwork::get_action()
   {
     create_experience();
     action = CREATE_NODE;
-  } else {
+  }
+  else
+  {
     experience = &experiences[current_exp];
 
     delta_pc = get_delta_pc(experience->x_pc, experience->y_pc, experience->th_pc);
 
-    PosecellVisualTemplate * pcvt = &visual_templates[current_vt];
+    PosecellVisualTemplate* pcvt = &visual_templates[current_vt];
     if (pcvt->exps.size() == 0)
     {
       create_experience();
       action = CREATE_NODE;
-     }
+    }
     else if (delta_pc > EXP_DELTA_PC_THRESHOLD || current_vt != prev_vt)
     {
       // go through all the exps associated with the current view and find the one with the closest delta_pc
@@ -943,7 +947,7 @@ PosecellNetwork::PosecellAction PosecellNetwork::get_action()
       double min_delta = DBL_MAX;
       double delta_pc;
 
-    // find the closest experience in pose cell space
+      // find the closest experience in pose cell space
       for (i = 0; i < pcvt->exps.size(); i++)
       {
         // make sure we aren't comparing to the current experience
@@ -1010,24 +1014,24 @@ void PosecellNetwork::on_odo(double vtrans, double vrot, double time_diff_s)
 
 void PosecellNetwork::create_view_template()
 {
-  PosecellVisualTemplate * pcvt;
+  PosecellVisualTemplate* pcvt;
   visual_templates.resize(visual_templates.size() + 1);
   pcvt = &visual_templates[visual_templates.size() - 1];
   pcvt->pc_x = x();
   pcvt->pc_y = y();
   pcvt->pc_th = th();
   pcvt->decay = VT_ACTIVE_DECAY;
-
 }
 
 void PosecellNetwork::on_view_template(unsigned int vt, double vt_rad)
 {
-  PosecellVisualTemplate * pcvt;
+  PosecellVisualTemplate* pcvt;
+
   if (vt >= visual_templates.size())
   {
     // must be a new template
     create_view_template();
-    assert(vt == visual_templates.size()-1);
+    assert(vt == visual_templates.size() - 1);
   }
   else
   {
@@ -1039,7 +1043,9 @@ void PosecellNetwork::on_view_template(unsigned int vt, double vt_rad)
     {
       if (vt != current_vt)
       {
-      } else {
+      }
+      else
+      {
         pcvt->decay += VT_ACTIVE_DECAY;
       }
 
@@ -1047,18 +1053,18 @@ void PosecellNetwork::on_view_template(unsigned int vt, double vt_rad)
       double energy = PC_VT_INJECT_ENERGY * 1.0 / 30.0 * (30.0 - exp(1.2 * pcvt->decay));
       if (energy > 0)
       {
-		vt_delta_pc_th = vt_rad / (2.0*M_PI) * PC_DIM_TH;
-		double pc_th_corrected = pcvt->pc_th + vt_rad / (2.0*M_PI) * PC_DIM_TH;
-		if (pc_th_corrected < 0) 
-			pc_th_corrected = PC_DIM_TH + pc_th_corrected;
-		if (pc_th_corrected >= PC_DIM_TH)
-			pc_th_corrected = pc_th_corrected - PC_DIM_TH;
+        vt_delta_pc_th = vt_rad / (2.0 * M_PI) * PC_DIM_TH;
+        double pc_th_corrected = pcvt->pc_th + vt_rad / (2.0 * M_PI) * PC_DIM_TH;
+        if (pc_th_corrected < 0)
+          pc_th_corrected = PC_DIM_TH + pc_th_corrected;
+        if (pc_th_corrected >= PC_DIM_TH)
+          pc_th_corrected = pc_th_corrected - PC_DIM_TH;
         inject((int)pcvt->pc_x, (int)pcvt->pc_y, (int)pc_th_corrected, energy);
       }
     }
   }
 
-  for (unsigned int i=0; i < visual_templates.size(); i++)
+  for (unsigned int i = 0; i < visual_templates.size(); i++)
   {
     visual_templates[i].decay -= PC_VT_RESTORE;
     if (visual_templates[i].decay < VT_ACTIVE_DECAY)
@@ -1068,8 +1074,7 @@ void PosecellNetwork::on_view_template(unsigned int vt, double vt_rad)
   prev_vt = current_vt;
   current_vt = vt;
 
-vt_update = true;
+  vt_update = true;
 }
 
-} // namespace ratslam
-
+}  // namespace ratslam

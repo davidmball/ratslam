@@ -51,15 +51,17 @@ using namespace std;
 #include "ratslam/local_view_match.h"
 
 #if HAVE_IRRLICHT
+
 #include "graphics/local_view_scene.h"
-ratslam::LocalViewScene *lvs = NULL;
+
+ratslam::LocalViewScene* lvs = NULL;
 bool use_graphics;
 #endif
 
 ros::Publisher pub_vt;
 
 using namespace ratslam;
-ratslam::LocalViewMatch * lv = NULL;
+ratslam::LocalViewMatch* lv = NULL;
 std::string lvm_file_path = std::string("ratslam-latest.blvm");
 double lvm_save_period = 10.0;
 
@@ -102,7 +104,8 @@ void save_lvm_timer_callback(const ros::TimerEvent& event)
 
 bool load_lvm(const std::string& file_path)
 {
-  try {
+  try
+  {
     // create and open an archive for input
     std::ifstream ifs(file_path.c_str());
     boost::archive::binary_iarchive binary_archive(ifs);
@@ -110,12 +113,14 @@ bool load_lvm(const std::string& file_path)
     binary_archive >> *lv;
     // archive and stream closed when destructors are called
     return true;
-  } catch (...) {
+  }
+  catch (...)
+  {
     return false;
   }
 }
 
-int main(int argc, char * argv[])
+int main(int argc, char* argv[])
 {
   ROS_INFO_STREAM(argv[0] << " - openRatSLAM Copyright (C) 2012 David Ball and Scott Heath");
   ROS_INFO_STREAM("RatSLAM algorithm by Michael Milford and Gordon Wyeth");
@@ -132,7 +137,7 @@ int main(int argc, char * argv[])
   read_ini(argv[1], settings);
 
   get_setting_child(general_settings, settings, "general", true);
-  get_setting_from_ptree(topic_root, general_settings, "topic_root", (std::string)"");
+  get_setting_from_ptree(topic_root, general_settings, "topic_root", (std::string) "");
   get_setting_child(ratslam_settings, settings, "ratslam", true);
 
   lv = new ratslam::LocalViewMatch(ratslam_settings);
@@ -149,7 +154,8 @@ int main(int argc, char * argv[])
   priv_node.param("lvm_file_path", lvm_file_path, lvm_file_path);
 
   // try to load lvm
-  if (!load_lvm(lvm_file_path)) {
+  if (!load_lvm(lvm_file_path))
+  {
     ROS_WARN("Could not load LocalViewMatch from file \"%s\"", lvm_file_path.c_str());
   }
 
@@ -164,11 +170,11 @@ int main(int argc, char * argv[])
   ros::Timer lvm_save_timer = node.createTimer(ros::Duration(lvm_save_period), save_lvm_timer_callback);
 
 #ifdef HAVE_IRRLICHT
-    boost::property_tree::ptree draw_settings;
-    get_setting_child(draw_settings, settings, "draw", true);
-    get_setting_from_ptree(use_graphics, draw_settings, "enable", true);
-    if (use_graphics)
-      lvs = new ratslam::LocalViewScene(draw_settings, lv);
+  boost::property_tree::ptree draw_settings;
+  get_setting_child(draw_settings, settings, "draw", true);
+  get_setting_from_ptree(use_graphics, draw_settings, "enable", true);
+  if (use_graphics)
+    lvs = new ratslam::LocalViewScene(draw_settings, lv);
 #endif
 
   ros::spin();

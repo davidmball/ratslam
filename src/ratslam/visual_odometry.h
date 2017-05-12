@@ -27,6 +27,7 @@
  */
 
 #include <boost/property_tree/ini_parser.hpp>
+
 using boost::property_tree::ptree;
 
 #include <ros/ros.h>
@@ -37,50 +38,52 @@ using boost::property_tree::ptree;
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-namespace ratslam {
-
+namespace ratslam
+{
 class VisualOdometry
 {
 public:
-
   VisualOdometry(ptree settings);
 
-  void on_image(const unsigned char * data, bool greyscale, unsigned int image_width, unsigned int image_height, double *vtrans_ms, double *vrot_rads);
+  void on_image(const unsigned char* data, bool greyscale, unsigned int image_width, unsigned int image_height,
+                double* vtrans_ms, double* vrot_rads);
 
-  template<typename Archive>
-    void serialize(Archive& ar, const unsigned int version)
-    {
-      ar & IMAGE_HEIGHT;
-      ar & IMAGE_WIDTH;
+  template <typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    ar& IMAGE_HEIGHT;
+    ar& IMAGE_WIDTH;
 
-      ar & VTRANS_IMAGE_X_MIN;
-      ar & VTRANS_IMAGE_X_MAX;
-      ar & VTRANS_IMAGE_Y_MIN;
-      ar & VTRANS_IMAGE_Y_MAX;
+    ar& VTRANS_IMAGE_X_MIN;
+    ar& VTRANS_IMAGE_X_MAX;
+    ar& VTRANS_IMAGE_Y_MIN;
+    ar& VTRANS_IMAGE_Y_MAX;
 
-      ar & VROT_IMAGE_X_MIN;
-      ar & VROT_IMAGE_X_MAX;
-      ar & VROT_IMAGE_Y_MIN;
-      ar & VROT_IMAGE_Y_MAX;
+    ar& VROT_IMAGE_X_MIN;
+    ar& VROT_IMAGE_X_MAX;
+    ar& VROT_IMAGE_Y_MIN;
+    ar& VROT_IMAGE_Y_MAX;
 
-      ar & CAMERA_FOV_DEG;
-      ar & CAMERA_HZ;
+    ar& CAMERA_FOV_DEG;
+    ar& CAMERA_HZ;
 
-      ar & VTRANS_SCALING;
-      ar & VTRANS_MAX;
+    ar& VTRANS_SCALING;
+    ar& VTRANS_MAX;
 
-      ar & vtrans_profile;
-      ar & vrot_profile;
+    ar& vtrans_profile;
+    ar& vrot_profile;
 
-      ar & vtrans_prev_profile;
-      ar & vrot_prev_profile;
+    ar& vtrans_prev_profile;
+    ar& vrot_prev_profile;
 
-      ar & first;
-    }
+    ar& first;
+  }
 
 private:
-
-  VisualOdometry() {;}
+  VisualOdometry()
+  {
+    ;
+  }
 
   int IMAGE_HEIGHT;
   int IMAGE_WIDTH;
@@ -109,10 +112,10 @@ private:
 
   bool first;
 
-  void visual_odo(double *data, unsigned short width, double *olddata, double *vtrans_ms, double *vrot_rads);
+  void visual_odo(double* data, unsigned short width, double* olddata, double* vtrans_ms, double* vrot_rads);
 
-  void convert_view_to_view_template(double *current_view, const unsigned char *view_rgb, bool grayscale, int X_RANGE_MIN, int X_RANGE_MAX, int Y_RANGE_MIN, int Y_RANGE_MAX);
-
+  void convert_view_to_view_template(double* current_view, const unsigned char* view_rgb, bool grayscale,
+                                     int X_RANGE_MIN, int X_RANGE_MAX, int Y_RANGE_MIN, int Y_RANGE_MAX);
 };
 
-}; // namespace ratslam
+};  // namespace ratslam

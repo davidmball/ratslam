@@ -36,7 +36,6 @@ using namespace std;
 
 namespace ratslam
 {
-
 ExperienceMap::ExperienceMap(ptree settings)
 {
   get_setting_from_ptree(EXP_CORRECTION, settings, "exp_correction", 0.5);
@@ -54,13 +53,12 @@ ExperienceMap::ExperienceMap(ptree settings)
   goal_timeout_s = 0;
   goal_success = false;
 
-  accum_delta_facing = EXP_INITIAL_EM_DEG * M_PI/180;
+  accum_delta_facing = EXP_INITIAL_EM_DEG * M_PI / 180;
   accum_delta_x = 0;
   accum_delta_y = 0;
   accum_delta_time_s = 0;
 
   relative_rad = 0;
-
 }
 
 ExperienceMap::~ExperienceMap()
@@ -69,12 +67,11 @@ ExperienceMap::~ExperienceMap()
   experiences.clear();
 }
 
-// create a new experience for a given position 
+// create a new experience for a given position
 int ExperienceMap::on_create_experience(unsigned int exp_id)
 {
-
   experiences.resize(experiences.size() + 1);
-  Experience * new_exp = &(*(experiences.end() - 1));
+  Experience* new_exp = &(*(experiences.end() - 1));
 
   if (experiences.size() == 0)
   {
@@ -118,8 +115,8 @@ bool ExperienceMap::iterate()
   int i;
   unsigned int link_id;
   unsigned int exp_id;
-  Experience * link_from, *link_to;
-  Link * link;
+  Experience* link_from, *link_to;
+  Link* link;
   double lx, ly, df;
 
   for (i = 0; i < EXP_LOOPS; i++)
@@ -166,7 +163,7 @@ bool ExperienceMap::iterate()
 // create a link between two experiences
 bool ExperienceMap::on_create_link(int exp_id_from, int exp_id_to, double rel_rad)
 {
-  Experience * current_exp = &experiences[exp_id_from];
+  Experience* current_exp = &experiences[exp_id_from];
 
   // check if the link already exists
   for (unsigned int i = 0; i < experiences[exp_id_from].links_from.size(); i++)
@@ -182,7 +179,7 @@ bool ExperienceMap::on_create_link(int exp_id_from, int exp_id_to, double rel_ra
   }
 
   links.resize(links.size() + 1);
-  Link * new_link = &(*(links.end() - 1));
+  Link* new_link = &(*(links.end() - 1));
 
   new_link->exp_to_id = exp_id_to;
   new_link->exp_from_id = exp_id_from;
@@ -222,17 +219,16 @@ int ExperienceMap::on_set_experience(int new_exp_id, double rel_rad)
 
 struct compare
 {
-  bool operator()(const Experience *exp1, const Experience *exp2)
+  bool operator()(const Experience* exp1, const Experience* exp2)
   {
     return exp1->time_from_current_s > exp2->time_from_current_s;
   }
 };
 
-double exp_euclidean_m(Experience *exp1, Experience *exp2)
+double exp_euclidean_m(Experience* exp1, Experience* exp2)
 {
   return sqrt(
       (double)((exp1->x_m - exp2->x_m) * (exp1->x_m - exp2->x_m) + (exp1->y_m - exp2->y_m) * (exp1->y_m - exp2->y_m)));
-
 }
 
 double ExperienceMap::dijkstra_distance_between_experiences(int id1, int id2)
@@ -265,7 +261,7 @@ double ExperienceMap::dijkstra_distance_between_experiences(int id1, int id2)
 
     for (id = 0; id < exp->links_to.size(); id++)
     {
-      Link *link = &links[exp->links_to[id]];
+      Link* link = &links[exp->links_to[id]];
       link_time_s = exp->time_from_current_s + link->delta_time_s;
       if (link_time_s < experiences[link->exp_from_id].time_from_current_s)
       {
@@ -276,7 +272,7 @@ double ExperienceMap::dijkstra_distance_between_experiences(int id1, int id2)
 
     for (id = 0; id < exp->links_from.size(); id++)
     {
-      Link *link = &links[exp->links_from[id]];
+      Link* link = &links[exp->links_from[id]];
       link_time_s = exp->time_from_current_s + link->delta_time_s;
       if (link_time_s < experiences[link->exp_to_id].time_from_current_s)
       {
@@ -298,7 +294,6 @@ double ExperienceMap::dijkstra_distance_between_experiences(int id1, int id2)
 // return true if path to goal found
 bool ExperienceMap::calculate_path_to_goal(double time_s)
 {
-
   unsigned int id;
   waypoint_exp_id = -1;
 
@@ -306,18 +301,18 @@ bool ExperienceMap::calculate_path_to_goal(double time_s)
     return false;
 
   // check if we are within thres of the goal or timeout
-  if (exp_euclidean_m(&experiences[current_exp_id], &experiences[goal_list[0]]) < 0.1
-      || ((goal_timeout_s != 0) && time_s > goal_timeout_s))
+  if (exp_euclidean_m(&experiences[current_exp_id], &experiences[goal_list[0]]) < 0.1 ||
+      ((goal_timeout_s != 0) && time_s > goal_timeout_s))
   {
     if (goal_timeout_s != 0 && time_s > goal_timeout_s)
     {
-//      cout << "Timed out reaching goal ... sigh" << endl;
+      //      cout << "Timed out reaching goal ... sigh" << endl;
       goal_success = false;
     }
     if (exp_euclidean_m(&experiences[current_exp_id], &experiences[goal_list[0]]) < 0.1)
     {
       goal_success = true;
- //     cout << "Goal reached ... yay!" << endl;
+      //     cout << "Goal reached ... yay!" << endl;
     }
     goal_list.pop_front();
     goal_timeout_s = 0;
@@ -362,7 +357,7 @@ bool ExperienceMap::calculate_path_to_goal(double time_s)
 
       for (id = 0; id < exp->links_to.size(); id++)
       {
-        Link *link = &links[exp->links_to[id]];
+        Link* link = &links[exp->links_to[id]];
         link_time_s = exp->time_from_current_s + link->delta_time_s;
         if (link_time_s < experiences[link->exp_from_id].time_from_current_s)
         {
@@ -373,7 +368,7 @@ bool ExperienceMap::calculate_path_to_goal(double time_s)
 
       for (id = 0; id < exp->links_from.size(); id++)
       {
-        Link *link = &links[exp->links_from[id]];
+        Link* link = &links[exp->links_from[id]];
         link_time_s = exp->time_from_current_s + link->delta_time_s;
         if (link_time_s < experiences[link->exp_to_id].time_from_current_s)
         {
@@ -385,7 +380,6 @@ bool ExperienceMap::calculate_path_to_goal(double time_s)
       if (!exp_heap.empty())
         std::make_heap(const_cast<Experience**>(&exp_heap.top()),
                        const_cast<Experience**>(&exp_heap.top()) + exp_heap.size(), compare());
-
     }
 
     // now do the current to goal links
@@ -416,7 +410,7 @@ bool ExperienceMap::get_goal_waypoint()
 
   double dist;
   unsigned int trace_exp_id = goal_list[0];
-  Experience *robot_exp = &experiences[current_exp_id];
+  Experience* robot_exp = &experiences[current_exp_id];
 
   while (trace_exp_id != goal_path_final_exp_id)
   {
@@ -446,9 +440,8 @@ void ExperienceMap::add_goal(double x_m, double y_m)
 
   for (unsigned int i = 0; i < experiences.size(); i++)
   {
-    dist = sqrt(
-        (experiences[i].x_m - x_m) * (experiences[i].x_m - x_m)
-            + (experiences[i].y_m - y_m) * (experiences[i].y_m - y_m));
+    dist = sqrt((experiences[i].x_m - x_m) * (experiences[i].x_m - x_m) +
+                (experiences[i].y_m - y_m) * (experiences[i].y_m - y_m));
     if (dist < min_dist)
     {
       min_id = i;
@@ -458,16 +451,14 @@ void ExperienceMap::add_goal(double x_m, double y_m)
 
   if (min_dist < 0.1)
     add_goal(min_id);
-
 }
 
 double ExperienceMap::get_subgoal_m() const
 {
-  return (
-      waypoint_exp_id == -1 ? 0 :
-          sqrt(
-              (double)pow((experiences[waypoint_exp_id].x_m - experiences[current_exp_id].x_m), 2)
-                  + (double)pow((experiences[waypoint_exp_id].y_m - experiences[current_exp_id].y_m), 2)));
+  return (waypoint_exp_id == -1 ?
+              0 :
+              sqrt((double)pow((experiences[waypoint_exp_id].x_m - experiences[current_exp_id].x_m), 2) +
+                   (double)pow((experiences[waypoint_exp_id].y_m - experiences[current_exp_id].y_m), 2)));
 }
 
 double ExperienceMap::get_subgoal_rad() const
@@ -482,5 +473,4 @@ double ExperienceMap::get_subgoal_rad() const
   }
 }
 
-} // namespace ratslam
-
+}  // namespace ratslam

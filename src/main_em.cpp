@@ -68,7 +68,9 @@ visualization_msgs::Marker em_marker;
 ratslam::ExperienceMap* em;
 
 #ifdef HAVE_IRRLICHT
+
 #include "graphics/experience_map_scene.h"
+
 ratslam::ExperienceMapScene* ems;
 bool use_graphics;
 #endif
@@ -88,7 +90,8 @@ std::string map_file_path = std::string("ratslam-latest.bmap");
  * \param odo The incoming odometry message.
  * \param em Pointer to current experience map.
  */
-void odo_callback(nav_msgs::OdometryConstPtr odo) {
+void odo_callback(nav_msgs::OdometryConstPtr odo)
+{
   ROS_DEBUG_STREAM("EM:odo_callback{" << ros::Time::now() << "} seq=" << odo->header.seq
                                       << " v=" << odo->twist.twist.linear.x << " r=" << odo->twist.twist.angular.z);
 
@@ -251,7 +254,6 @@ void action_callback(ratslam_ros::TopologicalActionConstPtr action)
   em_marker.pose.orientation.z = 0;
   em_marker.pose.orientation.w = 1;
   for (int i = 0; i < em->get_num_links(); i++)
-
   {
     em_marker.points[i * 2].x = em->get_experience(em->get_link(i)->exp_from_id)->x_m;
     em_marker.points[i * 2].y = em->get_experience(em->get_link(i)->exp_from_id)->y_m;
@@ -316,7 +318,8 @@ void save_map_timer_callback(const ros::TimerEvent& event)
 
 bool load_map(const std::string& file_path)
 {
-  try {
+  try
+  {
     // create and open an archive for input
     std::ifstream ifs(file_path.c_str());
     boost::archive::binary_iarchive binary_archive(ifs);
@@ -324,7 +327,9 @@ bool load_map(const std::string& file_path)
     binary_archive >> *em;
     // archive and stream closed when destructors are called
     return true;
-  } catch (...) {
+  }
+  catch (...)
+  {
     return false;
   }
 }
@@ -374,7 +379,8 @@ int main(int argc, char* argv[])
   em = new ratslam::ExperienceMap(ratslam_settings);
 
   // try to load map
-  if (!load_map(map_file_path)) {
+  if (!load_map(map_file_path))
+  {
     ROS_WARN("Could not load map from file \"%s\"", map_file_path.c_str());
   }
 
@@ -385,14 +391,14 @@ int main(int argc, char* argv[])
   pub_goal_path = node.advertise<nav_msgs::Path>(topic_root + "/ExperienceMap/PathToGoal", 1);
 
   // subs
-  ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>(
-    "odom", 0, odo_callback, ros::VoidConstPtr(), ros::TransportHints().tcpNoDelay());
-  ros::Subscriber sub_action = node.subscribe<ratslam_ros::TopologicalAction>(
-    topic_root + "/PoseCell/TopologicalAction", 0, action_callback, ros::VoidConstPtr(),
-    ros::TransportHints().tcpNoDelay());
-  ros::Subscriber sub_goal = node.subscribe<geometry_msgs::PoseStamped>(
-    topic_root + "/ExperienceMap/SetGoalPose", 0, set_goal_pose_callback, ros::VoidConstPtr(),
-    ros::TransportHints().tcpNoDelay());
+  ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>("odom", 0, odo_callback, ros::VoidConstPtr(),
+                                                                    ros::TransportHints().tcpNoDelay());
+  ros::Subscriber sub_action =
+      node.subscribe<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction", 0, action_callback,
+                                                     ros::VoidConstPtr(), ros::TransportHints().tcpNoDelay());
+  ros::Subscriber sub_goal =
+      node.subscribe<geometry_msgs::PoseStamped>(topic_root + "/ExperienceMap/SetGoalPose", 0, set_goal_pose_callback,
+                                                 ros::VoidConstPtr(), ros::TransportHints().tcpNoDelay());
 
   // timers
   ros::Timer tf_update_timer = priv_node.createTimer(ros::Duration(1.0 / tf_update_rate), tf_update_timer_callback);

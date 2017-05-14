@@ -3,6 +3,8 @@ project(ratslam_ros)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
+# Enable Cxx11 support
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -57,12 +59,16 @@ CATKIN_DEPENDS message_runtime geometry_msgs std_msgs
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
+  src
   ${catkin_INCLUDE_DIRS}
 )
 
 #ratslam library
 add_library(ratslam src/ratslam/experience_map.cpp src/ratslam/posecell_network.cpp src/ratslam/local_view_match.cpp src/ratslam/visual_odometry.cpp)
 
+target_link_libraries(ratslam
+  ${Boost_LIBRARIES}
+)
 
 # uncomment is you don't have irrlicht installed
 add_definitions("-DHAVE_IRRLICHT")
@@ -74,7 +80,7 @@ target_link_libraries(ratslam_lv
   ${IRRLICHT_LIBRARIES}
   ${OPENGL_LIBRARIES}
   ${OpenCV_LIBRARIES}
-  ${Boost_LIBRARIES})
+)
 
 add_executable(ratslam_pc src/main_pc.cpp)
 target_link_libraries(ratslam_pc
@@ -82,7 +88,7 @@ target_link_libraries(ratslam_pc
   ratslam
   ${IRRLICHT_LIBRARIES}
   ${OPENGL_LIBRARIES}
-  ${Boost_LIBRARIES})
+)
 
 add_executable(ratslam_em src/main_em.cpp)
 target_link_libraries(ratslam_em
@@ -90,7 +96,7 @@ target_link_libraries(ratslam_em
   ratslam
   ${IRRLICHT_LIBRARIES}
   ${OPENGL_LIBRARIES}
-  ${Boost_LIBRARIES})
+)
 
 add_executable(ratslam_vo src/main_vo.cpp)
 target_link_libraries(ratslam_vo
@@ -98,7 +104,8 @@ target_link_libraries(ratslam_vo
   ratslam
   ${IRRLICHT_LIBRARIES}
   ${OPENGL_LIBRARIES}
-  ${OpenCV_LIBRARIES})
+  ${OpenCV_LIBRARIES}
+)
 
 #config files for devel
 set(MEDIA_PATH ${CMAKE_CURRENT_SOURCE_DIR}/src/media) #devel use the files in the source dir

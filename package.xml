@@ -1,10 +1,15 @@
 <package>
   <name>ratslam_ros</name>
-  <version>0.0.1</version>
+  <version>1.0.0</version>
   <description>ratslam_ros</description>
 
-  <author>scott</author>
+  <author>Michael Milford</author>
+  <author>Gordon Wyeth</author>
+  <author email="davidmichaelball@gmail.com">David Ball</author>
+  <author>Scott Heath</author>
+
   <maintainer email="davidmichaelball@gmail.com">David Ball</maintainer>
+  <maintainer email="semael23@gmail.com">Peter Rudolph</maintainer>
 
   <license>BSD</license>
   <url>http://ros.org/wiki/ratslam</url>

@@ -137,10 +137,9 @@ int main(int argc, char* argv[])
   read_ini(argv[1], settings);
 
   get_setting_child(general_settings, settings, "general", true);
+  // backward compatibility, namespace or private nodehandle should do it more ROS like
   get_setting_from_ptree(topic_root, general_settings, "topic_root", (std::string) "");
   get_setting_child(ratslam_settings, settings, "ratslam", true);
-
-  lv = new ratslam::LocalViewMatch(ratslam_settings);
 
   // initialize ROS node
   ros::init(argc, argv, "RatSLAMViewTemplate");
@@ -153,6 +152,16 @@ int main(int argc, char* argv[])
   priv_node.param("lvm_save_period", lvm_save_period, lvm_save_period);
   priv_node.param("lvm_file_path", lvm_file_path, lvm_file_path);
 
+  // check backward compatibility with configs that have topic_root set
+  std::string image_topic = "image";
+  if (!topic_root.empty())
+  {
+    // prepend with topic with topic_root setting
+    image_topic = topic_root + "/camera/image";
+  }
+
+  lv = new ratslam::LocalViewMatch(ratslam_settings);
+
   // try to load lvm
   if (!load_lvm(lvm_file_path))
   {
@@ -164,7 +173,7 @@ int main(int argc, char* argv[])
 
   // image transport
   image_transport::ImageTransport it(node);
-  image_transport::Subscriber sub = it.subscribe("image", 0, image_callback);
+  image_transport::Subscriber sub = it.subscribe(image_topic, 0, image_callback);
 
   // timers
   ros::Timer lvm_save_timer = node.createTimer(ros::Duration(lvm_save_period), save_lvm_timer_callback);

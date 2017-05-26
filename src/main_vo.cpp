@@ -83,6 +83,7 @@ int main(int argc, char* argv[])
   read_ini(argv[1], settings);
   ratslam::get_setting_child(vo_settings, settings, "visual_odometry", true);
   ratslam::get_setting_child(general_settings, settings, "general", true);
+  // backward compatibility, namespace or private nodehandle should do it more ROS like
   ratslam::get_setting_from_ptree(topic_root, general_settings, "topic_root", (std::string) "");
 
   vo = new ratslam::VisualOdometry(vo_settings);
@@ -93,10 +94,22 @@ int main(int argc, char* argv[])
   }
   ros::NodeHandle node;
 
-  pub_vo = node.advertise<nav_msgs::Odometry>("odom", 0);
+  std::string odom_topic = "odom";
+  std::string image_topic = "image";
 
+  // check backward compatibility with configs that have topic_root set
+  if (!topic_root.empty())
+  {
+    image_topic = topic_root + "/camera/image";
+    odom_topic = topic_root + "/odom";
+  }
+
+  // pubs
+  pub_vo = node.advertise<nav_msgs::Odometry>(odom_topic, 0);
+
+  // subs
   image_transport::ImageTransport it(node);
-  image_transport::Subscriber sub = it.subscribe("image", 1, image_callback);
+  image_transport::Subscriber sub = it.subscribe(image_topic, 1, image_callback);
 
   ros::spin();
 

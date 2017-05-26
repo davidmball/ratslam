@@ -172,6 +172,13 @@ int main(int argc, char* argv[])
   priv_node.param("pcn_save_period", pcn_save_period, pcn_save_period);
   priv_node.param("pcn_file_path", pcn_file_path, pcn_file_path);
 
+  // check backward compatibility with configs that have topic_root set
+  std::string odom_topic = "odom";
+  if (!topic_root.empty())
+  {
+    odom_topic = topic_root + "/odom";
+  }
+
   // create PoseCellNetwork object
   pc = new ratslam::PosecellNetwork(ratslam_settings);
 
@@ -185,7 +192,7 @@ int main(int argc, char* argv[])
   pub_pc = node.advertise<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction", 0);
 
   // subs
-  ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>("odom", 0, odo_callback, ros::VoidConstPtr(),
+  ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>(odom_topic, 0, odo_callback, ros::VoidConstPtr(),
                                                                     ros::TransportHints().tcpNoDelay());
   ros::Subscriber sub_template =
       node.subscribe<ratslam_ros::ViewTemplate>(topic_root + "/LocalView/Template", 0, template_callback,

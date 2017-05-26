@@ -79,7 +79,7 @@ using namespace ratslam;
 
 std::string map_frame = std::string("map");
 std::string odom_frame = std::string("odom");
-std::string base_frame = std::string("base_footprint");
+std::string base_frame = std::string("base_link");
 double tf_update_rate = 20.0;
 double map_save_period = 10.0;
 std::string map_file_path = std::string("ratslam-latest.bmap");
@@ -356,6 +356,7 @@ int main(int argc, char* argv[])
 
   get_setting_child(ratslam_settings, settings, "ratslam", true);
   get_setting_child(general_settings, settings, "general", true);
+  // backward compatibility, namespace or private nodehandle should do it more ROS like
   get_setting_from_ptree(topic_root, general_settings, "topic_root", (std::string) "");
 
   ros::NodeHandle node;
@@ -375,6 +376,13 @@ int main(int argc, char* argv[])
   priv_node.param("map_save_period", map_save_period, map_save_period);
   priv_node.param("map_file_path", map_file_path, map_file_path);
 
+  // check backward compatibility with configs that have topic_root set
+  std::string odom_topic = "odom";
+  if (!topic_root.empty())
+  {
+    odom_topic = topic_root + "/odom";
+  }
+
   // create the experience map object
   em = new ratslam::ExperienceMap(ratslam_settings);
 
@@ -391,7 +399,7 @@ int main(int argc, char* argv[])
   pub_goal_path = node.advertise<nav_msgs::Path>(topic_root + "/ExperienceMap/PathToGoal", 1);
 
   // subs
-  ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>("odom", 0, odo_callback, ros::VoidConstPtr(),
+  ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>(odom_topic, 0, odo_callback, ros::VoidConstPtr(),
                                                                     ros::TransportHints().tcpNoDelay());
   ros::Subscriber sub_action =
       node.subscribe<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction", 0, action_callback,

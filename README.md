@@ -17,14 +17,14 @@ OpenRatSLAM is based on the RatSLAM C++ library written by David Ball and Scott 
 OpenRatSLAM has only been tested on Ubuntu and as ROS support for platforms other than Linux is still limited, this will probably not change.
 
 * Maintainer status: maintained
-* Maintainer: Peter Rudolph <semael23 AT gmail DOT com>
-* Authors: Michael Milford and Gordon Wyeth (RatSLAM), David Ball and Scott Heath (RatSLAM C++), David Ball (OpenRatSLAM)
+* Maintainers: David M. Ball \<davidmichaelball AT gmail DOT com\>, Peter Rudolph \<semael23 AT gmail DOT com\> 
+* Authors: Michael Milford and Gordon Wyeth (RatSLAM), David Ball and Scott Heath (RatSLAM C++), David M. Ball (OpenRatSLAM)
 * License: GNU General Public License v3.0
 * Source: git https://github.com/sem23/ratslam.git (branch: ratslam_ros)
 
 ## 1. External Documentation
 
-Further documentation can be found on ROS wrapper authors [git](https://github.com/davidmball/ratslam).
+[David Ball, Scott Heath, Janet Wiles, Gordon Wyeth, Peter Corke, Michael Milford: OpenRatSLAM: an open source brain-based SLAM system, Autonomous Robots, 2013](https://link.springer.com/article/10.1007%2Fs10514-012-9317-9).
 
 ## 2. Hardware Requirements
 
@@ -78,7 +78,7 @@ topic_root + "/ExperienceMap/PathToGoal" ([nav_msgs/Path](http://docs.ros.org/ap
 "odom_frame" (Default: "odom")
 > The name of the odometry frame.
 
-"base_frame" (Default: "base_footprint")
+"base_frame" (Default: "base_link")
 > The name of the base frame.
 
 "tf_update_rate" (Default: 20.0)

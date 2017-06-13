@@ -79,7 +79,7 @@ target_link_libraries(ratslam
   ${Boost_LIBRARIES}
 )
 
-# uncomment is you don't have irrlicht installed
+# comment this out, if you don't have irrlicht installed
 add_definitions("-DHAVE_IRRLICHT")
 
 add_executable(ratslam_lv src/main_lv.cpp)
@@ -163,3 +163,22 @@ install(DIRECTORY src/media/
 
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/config/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config)
+
+if (CATKIN_ENABLE_TESTING)
+
+## setup test data download target
+add_custom_target(
+  irat_aus_test.bag
+  COMMAND if [ ! -e ./tests ]\; then mkdir tests\; fi
+  COMMAND if [ ! -e ./tests/irat_aus_test.bag ]\; then wget https://www.dropbox.com/s/ukiob6h0reavhem/irat_aus_test.bag?dl=0 -O tests/irat_aus_test.bag\; fi
+  WORKING_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+## add download target to test target dependencies
+add_dependencies(tests irat_aus_test.bag)
+
+## add rostests
+find_package(rostest REQUIRED)
+add_rostest(tests/irat_aus.test)
+
+endif()

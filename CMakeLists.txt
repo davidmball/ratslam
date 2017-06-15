@@ -20,7 +20,7 @@ endif()
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS message_generation std_msgs roscpp sensor_msgs nav_msgs tf visualization_msgs image_transport nav_msgs) ## actionlib_msgs)
 
-find_package(OpenCV)
+find_package(OpenCV 3 REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 find_package(Boost REQUIRED COMPONENTS serialization)
 find_package(Irrlicht REQUIRED)

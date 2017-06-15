@@ -16,10 +16,9 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>libopencv-dev</build_depend>
   <build_depend>libirrlicht-dev</build_depend>
   <build_depend>opengl</build_depend>
-  <build_depend>opencv3</build_depend>
+  <build_depend>cv_bridge</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>roscpp</build_depend>
@@ -35,10 +34,9 @@
   <build_depend>message_runtime</build_depend>
   <build_depend>wget</build_depend>
 
-  <run_depend>libopencv-dev</run_depend>
   <run_depend>libirrlicht-dev</run_depend>
   <run_depend>opengl</run_depend>
-  <run_depend>opencv3</run_depend>
+  <run_depend>cv_bridge</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>roscpp</run_depend>

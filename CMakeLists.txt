@@ -20,8 +20,7 @@ endif()
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS message_generation std_msgs roscpp sensor_msgs nav_msgs tf visualization_msgs image_transport nav_msgs) ## actionlib_msgs)
 
-find_package(OpenCV 3 REQUIRED)
-include_directories(${OpenCV_INCLUDE_DIRS})
+find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED COMPONENTS serialization)
 find_package(Irrlicht REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -69,6 +68,7 @@ CATKIN_DEPENDS message_runtime geometry_msgs std_msgs
 # include_directories(include)
 include_directories(
   src
+  ${OpenCV_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -77,6 +77,7 @@ add_library(ratslam src/ratslam/experience_map.cpp src/ratslam/posecell_network.
 
 target_link_libraries(ratslam
   ${Boost_LIBRARIES}
+  ${OpenCV_LIBRARIES}
 )
 
 # comment this out, if you don't have irrlicht installed
@@ -84,36 +85,34 @@ add_definitions("-DHAVE_IRRLICHT")
 
 add_executable(ratslam_lv src/main_lv.cpp)
 target_link_libraries(ratslam_lv
-  ${catkin_LIBRARIES}
   ratslam
   ${IRRLICHT_LIBRARIES}
   ${OPENGL_LIBRARIES}
-  ${OpenCV_LIBRARIES}
+  ${catkin_LIBRARIES}
 )
 
 add_executable(ratslam_pc src/main_pc.cpp)
 target_link_libraries(ratslam_pc
-  ${catkin_LIBRARIES}
   ratslam
   ${IRRLICHT_LIBRARIES}
   ${OPENGL_LIBRARIES}
+  ${catkin_LIBRARIES}
 )
 
 add_executable(ratslam_em src/main_em.cpp)
 target_link_libraries(ratslam_em
-  ${catkin_LIBRARIES}
   ratslam
   ${IRRLICHT_LIBRARIES}
   ${OPENGL_LIBRARIES}
+  ${catkin_LIBRARIES}
 )
 
 add_executable(ratslam_vo src/main_vo.cpp)
 target_link_libraries(ratslam_vo
-  ${catkin_LIBRARIES}
   ratslam
   ${IRRLICHT_LIBRARIES}
   ${OPENGL_LIBRARIES}
-  ${OpenCV_LIBRARIES}
+  ${catkin_LIBRARIES}
 )
 
 #config files for devel

@@ -35,6 +35,7 @@
 #define _EXPERIENCE_MAP_H_
 
 #define _USE_MATH_DEFINES
+
 #include "math.h"
 
 #include <stdio.h>
@@ -44,6 +45,7 @@
 #include <iostream>
 
 #include <boost/property_tree/ini_parser.hpp>
+
 using boost::property_tree::ptree;
 
 #include <boost/serialization/access.hpp>
@@ -53,7 +55,6 @@ using boost::property_tree::ptree;
 
 namespace ratslam
 {
-
 /*
  * The Link structure describes a link
  * between two experiences.
@@ -68,17 +69,16 @@ struct Link
   int exp_from_id;
   double delta_time_s;
 
-  template<typename Archive>
-    void serialize(Archive& ar, const unsigned int version)
-    {
-      ar & d;
-      ar & heading_rad;
-      ar & facing_rad;
-      ar & exp_to_id;
-      ar & exp_from_id;
-      ar & delta_time_s;
-    }
-
+  template <typename Archive>
+  void serialize(Archive &ar, const unsigned int version)
+  {
+    ar &d;
+    ar &heading_rad;
+    ar &facing_rad;
+    ar &exp_to_id;
+    ar &exp_from_id;
+    ar &delta_time_s;
+  }
 };
 
 /*
@@ -87,52 +87,52 @@ struct Link
  */
 struct Experience
 {
-  int id; // its own id
+  int id;  // its own id
 
   double x_m, y_m, th_rad;
   int vt_id;
 
-  std::vector<unsigned int> links_from; // links from this experience
-  std::vector<unsigned int> links_to; // links to this experience
-
+  std::vector<unsigned int> links_from;  // links from this experience
+  std::vector<unsigned int> links_to;    // links to this experience
 
   // goal navigation
   double time_from_current_s;
   unsigned int goal_to_current, current_to_goal;
 
-  template<typename Archive>
-    void serialize(Archive& ar, const unsigned int version)
-    {
-      ar & id;
-      ar & x_m & y_m & th_rad;
-      ar & vt_id;
-      ar & links_from & links_to;
-      ar & time_from_current_s;
-      ar & goal_to_current & current_to_goal;
-    }
-
+  template <typename Archive>
+  void serialize(Archive &ar, const unsigned int version)
+  {
+    ar &id;
+    ar &x_m &y_m &th_rad;
+    ar &vt_id;
+    ar &links_from &links_to;
+    ar &time_from_current_s;
+    ar &goal_to_current &current_to_goal;
+  }
 };
 
 class ExperienceMapScene;
 
 class ExperienceMap
 {
-
 public:
   friend class ExperienceMapScene;
 
   ExperienceMap(ptree settings);
+
   ~ExperienceMap();
 
   // create a new experience for a given position
   int on_create_experience(unsigned int exp_id);
+
   bool on_create_link(int exp_id_from, int exp_id_to, double rel_rad);
 
   Experience *get_experience(int id)
   {
     return &experiences[id];
   }
-  Link * get_link(int id)
+
+  Link *get_link(int id)
   {
     return &links[id];
   }
@@ -164,29 +164,38 @@ public:
 
   // functions for setting and handling goals.
   void add_goal(double x_m, double y_m);
+
   void add_goal(int id)
   {
     goal_list.push_back(id);
   }
+
   bool calculate_path_to_goal(double time_s);
+
   bool get_goal_waypoint();
+
   void clear_goal_list()
   {
     goal_list.clear();
   }
+
   int get_current_goal_id()
   {
     return (goal_list.size() == 0) ? -1 : (int)goal_list.front();
   }
+
   void delete_current_goal()
   {
     goal_list.pop_front();
   }
+
   bool get_goal_success()
   {
     return goal_success;
   }
+
   double get_subgoal_m() const;
+
   double get_subgoal_rad() const;
 
   const std::deque<int> &get_goals() const
@@ -196,37 +205,35 @@ public:
 
   unsigned int get_goal_path_final_exp()
   {
-          return goal_path_final_exp_id;
+    return goal_path_final_exp_id;
   }
 
+  template <typename Archive>
+  void serialize(Archive &ar, const unsigned int version)
+  {
+    ar &EXP_LOOPS;
+    ar &EXP_CORRECTION;
+    ar &MAX_GOALS;
+    ar &EXP_INITIAL_EM_DEG;
 
-  template<typename Archive>
-    void serialize(Archive& ar, const unsigned int version)
-    {
-      ar & EXP_LOOPS;
-      ar & EXP_CORRECTION;
-      ar & MAX_GOALS;
-      ar & EXP_INITIAL_EM_DEG;
+    ar &experiences;
+    ar &links;
+    ar &goal_list;
 
-      ar & experiences;
-      ar & links;
-      ar & goal_list;
+    ar &current_exp_id &prev_exp_id;
 
-      ar & current_exp_id & prev_exp_id;
+    ar &accum_delta_facing;
+    ar &accum_delta_x;
+    ar &accum_delta_y;
+    ar &accum_delta_time_s;
 
-      ar & accum_delta_facing;
-      ar & accum_delta_x;
-      ar & accum_delta_y;
-      ar & accum_delta_time_s;
+    ar &waypoint_exp_id;
+    ar &goal_success;
+    ar &goal_timeout_s;
+    ar &goal_path_final_exp_id;
 
-      ar & waypoint_exp_id;
-      ar & goal_success;
-      ar & goal_timeout_s;
-      ar & goal_path_final_exp_id;
-  	  
-      ar & relative_rad;
-
-    }
+    ar &relative_rad;
+  }
 
 private:
   friend class boost::serialization::access;
@@ -235,10 +242,10 @@ private:
   {
     ;
   }
+
   // calculate distance between two experiences using djikstras algorithm
   // can be very slow for many experiences
   double dijkstra_distance_between_experiences(int id1, int id2);
-
 
   int EXP_LOOPS;
   double EXP_CORRECTION;
@@ -262,9 +269,7 @@ private:
   bool goal_success;
   double goal_timeout_s;
   unsigned int goal_path_final_exp_id;
-
 };
-
 }
 
-#endif // _EXPERIENCE_MAP_H_
+#endif  // _EXPERIENCE_MAP_H_

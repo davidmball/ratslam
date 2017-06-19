@@ -27,6 +27,7 @@
  */
 
 #include <iostream>
+
 using namespace std;
 
 #include "utils/utils.h"
@@ -44,8 +45,7 @@ using namespace std;
 
 #include <image_transport/image_transport.h>
 
-
-ratslam::VisualOdometry *vo = NULL;
+ratslam::VisualOdometry* vo = NULL;
 ros::Publisher pub_vo;
 
 using namespace ratslam;
@@ -56,7 +56,8 @@ void image_callback(sensor_msgs::ImageConstPtr image)
 
   static nav_msgs::Odometry odom_output;
 
-  vo->on_image(&image->data[0], (image->encoding == "bgr8" ? false : true), image->width, image->height, &odom_output.twist.twist.linear.x, &odom_output.twist.twist.angular.z);
+  vo->on_image(&image->data[0], (image->encoding == "bgr8" ? false : true), image->width, image->height,
+               &odom_output.twist.twist.linear.x, &odom_output.twist.twist.angular.z);
 
   odom_output.header.stamp = image->header.stamp;
   odom_output.header.seq++;
@@ -64,8 +65,7 @@ void image_callback(sensor_msgs::ImageConstPtr image)
   pub_vo.publish(odom_output);
 }
 
-
-int main(int argc, char * argv[])
+int main(int argc, char* argv[])
 {
   ROS_INFO_STREAM(argv[0] << " - openRatSLAM Copyright (C) 2012 David Ball and Scott Heath");
   ROS_INFO_STREAM("RatSLAM algorithm by Michael Milford and Gordon Wyeth");
@@ -83,6 +83,7 @@ int main(int argc, char * argv[])
   read_ini(argv[1], settings);
   ratslam::get_setting_child(vo_settings, settings, "visual_odometry", true);
   ratslam::get_setting_child(general_settings, settings, "general", true);
+  // backward compatibility, namespace or private nodehandle should do it more ROS like
   ratslam::get_setting_from_ptree(topic_root, general_settings, "topic_root", (std::string) "");
 
   vo = new ratslam::VisualOdometry(vo_settings);
@@ -93,10 +94,22 @@ int main(int argc, char * argv[])
   }
   ros::NodeHandle node;
 
-  pub_vo = node.advertise<nav_msgs::Odometry>(topic_root + "/odom", 0);
+  std::string odom_topic = "odom";
+  std::string image_topic = "image";
 
+  // check backward compatibility with configs that have topic_root set
+  if (!topic_root.empty())
+  {
+    image_topic = topic_root + "/camera/image";
+    odom_topic = topic_root + "/odom";
+  }
+
+  // pubs
+  pub_vo = node.advertise<nav_msgs::Odometry>(odom_topic, 0);
+
+  // subs
   image_transport::ImageTransport it(node);
-  image_transport::Subscriber sub = it.subscribe(topic_root + "/camera/image", 1, image_callback);
+  image_transport::Subscriber sub = it.subscribe(image_topic, 1, image_callback);
 
   ros::spin();
 

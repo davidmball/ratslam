@@ -1,0 +1,47 @@
+<launch>
+
+    <!-- ROSBAG TEST DATA -->
+    <node pkg="rosbag" type="play" name="player"
+          args="--loop --clock $(find ratslam_ros)/tests/irat_aus_test.bag" />
+
+    <!-- RATSLAM NODES -->
+    <node name="RatSLAMLocalViewCells" pkg="ratslam_ros" type="ratslam_lv" args="$(find ratslam_ros)/config/config_irataus_test.txt _image_transport:=compressed" cwd="node" required="true" />
+    <node name="RatSLAMPoseCells" pkg="ratslam_ros" type="ratslam_pc" args="$(find ratslam_ros)/config/config_irataus_test.txt _image_transport:=compressed" cwd="node" required="true" />
+    <node name="RatSLAMExperienceMap" pkg="ratslam_ros" type="ratslam_em" args="$(find ratslam_ros)/config/config_irataus_test.txt _image_transport:=compressed" cwd="node" required="true" />
+
+    <!-- TESTS -->
+    <!-- test rosbag playing -->
+    <test test-name="rosbag_hztest_test" pkg="rostest" type="hztest" name="rosbag_hztest" >
+        <param name="topic" value="/irat_red/camera/image/compressed" />
+        <param name="hz" value="17.5" />
+        <param name="hzerror" value="1.5" />
+        <param name="test_duration" value="5.0" />
+    </test>
+
+    <!-- test local view template publishing -->
+    <test test-name="local_view_hztest_test" pkg="rostest" type="hztest" name="local_view_hztest" >
+        <param name="topic" value="/irat_red/LocalView/Template" />
+        <param name="hz" value="17.0" />
+        <param name="hzerror" value="2.0" />
+        <param name="test_duration" value="5.0" />
+    </test>
+
+    <!-- test pose cells action publishing -->
+    <!-- NOTE: hz and hzerror are set to dummy values, just to check if topic is published! -->
+    <test test-name="pose_cells_hztest_test" pkg="rostest" type="hztest" name="pose_cells_hztest" >
+        <param name="topic" value="/irat_red/PoseCell/TopologicalAction" />
+        <param name="hz" value="17.5" />
+        <param name="hzerror" value="17.5" />
+        <param name="test_duration" value="5.0" />
+    </test>
+
+    <!-- test experience map pose publishing -->
+    <!-- NOTE: hz and hzerror are set to dummy values, just to check if topic is published! -->
+    <test test-name="experience_map_hztest_test" pkg="rostest" type="hztest" name="experience_map_hztest" >
+        <param name="topic" value="/irat_red/ExperienceMap/RobotPose" />
+        <param name="hz" value="17.5" />
+        <param name="hzerror" value="17.5" />
+        <param name="test_duration" value="5.0" />
+    </test>
+
+</launch>

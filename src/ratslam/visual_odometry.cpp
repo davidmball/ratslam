@@ -34,7 +34,6 @@
 
 namespace ratslam
 {
-
 VisualOdometry::VisualOdometry(ptree settings)
 {
   get_setting_from_ptree(VTRANS_IMAGE_X_MIN, settings, "vtrans_image_x_min", 0);
@@ -61,7 +60,8 @@ VisualOdometry::VisualOdometry(ptree settings)
   first = true;
 }
 
-void VisualOdometry::on_image(const unsigned char * data, bool greyscale, unsigned int image_width, unsigned int image_height, double *vtrans_ms, double *vrot_rads)
+void VisualOdometry::on_image(const unsigned char* data, bool greyscale, unsigned int image_width,
+                              unsigned int image_height, double* vtrans_ms, double* vrot_rads)
 {
   double dummy;
 
@@ -81,14 +81,17 @@ void VisualOdometry::on_image(const unsigned char * data, bool greyscale, unsign
     first = false;
   }
 
-  convert_view_to_view_template(&vtrans_profile[0], data, greyscale, VTRANS_IMAGE_X_MIN, VTRANS_IMAGE_X_MAX, VTRANS_IMAGE_Y_MIN, VTRANS_IMAGE_Y_MAX);
+  convert_view_to_view_template(&vtrans_profile[0], data, greyscale, VTRANS_IMAGE_X_MIN, VTRANS_IMAGE_X_MAX,
+                                VTRANS_IMAGE_Y_MIN, VTRANS_IMAGE_Y_MAX);
   visual_odo(&vtrans_profile[0], vtrans_profile.size(), &vtrans_prev_profile[0], vtrans_ms, &dummy);
 
-  convert_view_to_view_template(&vrot_profile[0], data, greyscale, VROT_IMAGE_X_MIN, VROT_IMAGE_X_MAX, VROT_IMAGE_Y_MIN, VROT_IMAGE_Y_MAX);
+  convert_view_to_view_template(&vrot_profile[0], data, greyscale, VROT_IMAGE_X_MIN, VROT_IMAGE_X_MAX, VROT_IMAGE_Y_MIN,
+                                VROT_IMAGE_Y_MAX);
   visual_odo(&vrot_profile[0], vrot_profile.size(), &vrot_prev_profile[0], &dummy, vrot_rads);
 }
 
-void VisualOdometry::visual_odo(double *data, unsigned short width, double *olddata, double *vtrans_ms, double *vrot_rads)
+void VisualOdometry::visual_odo(double* data, unsigned short width, double* olddata, double* vtrans_ms,
+                                double* vrot_rads)
 {
   double mindiff = 1e6;
   double minoffset = 0;
@@ -143,15 +146,14 @@ void VisualOdometry::visual_odo(double *data, unsigned short width, double *oldd
   {
     olddata[i] = data[i];
   }
-  *vrot_rads = minoffset * CAMERA_FOV_DEG / IMAGE_WIDTH * CAMERA_HZ * M_PI / 180.0;
-  *vtrans_ms = mindiff * VTRANS_SCALING;
+  *vrot_rads = minoffset* CAMERA_FOV_DEG / IMAGE_WIDTH* CAMERA_HZ* M_PI / 180.0;
+  *vtrans_ms = mindiff* VTRANS_SCALING;
   if (*vtrans_ms > VTRANS_MAX)
     *vtrans_ms = VTRANS_MAX;
-
 }
 
-void VisualOdometry::convert_view_to_view_template(double *current_view, const unsigned char *view_rgb, bool grayscale, int X_RANGE_MIN, int X_RANGE_MAX, int Y_RANGE_MIN,
-                                                   int Y_RANGE_MAX)
+void VisualOdometry::convert_view_to_view_template(double* current_view, const unsigned char* view_rgb, bool grayscale,
+                                                   int X_RANGE_MIN, int X_RANGE_MAX, int Y_RANGE_MIN, int Y_RANGE_MAX)
 {
   unsigned int TEMPLATE_Y_SIZE = 1;
   unsigned int TEMPLATE_X_SIZE = X_RANGE_MAX - X_RANGE_MIN;
@@ -170,9 +172,11 @@ void VisualOdometry::convert_view_to_view_template(double *current_view, const u
 
   if (grayscale)
   {
-    for (int y_block = Y_RANGE_MIN, y_block_count = 0; y_block_count < TEMPLATE_Y_SIZE; y_block += y_block_size, y_block_count++)
+    for (int y_block = Y_RANGE_MIN, y_block_count = 0; y_block_count < TEMPLATE_Y_SIZE;
+         y_block += y_block_size, y_block_count++)
     {
-      for (int x_block = X_RANGE_MIN, x_block_count = 0; x_block_count < TEMPLATE_X_SIZE; x_block += x_block_size, x_block_count++)
+      for (int x_block = X_RANGE_MIN, x_block_count = 0; x_block_count < TEMPLATE_X_SIZE;
+           x_block += x_block_size, x_block_count++)
       {
         for (int x = x_block; x < (x_block + x_block_size); x++)
         {
@@ -190,16 +194,19 @@ void VisualOdometry::convert_view_to_view_template(double *current_view, const u
   }
   else
   {
-    for (int y_block = Y_RANGE_MIN, y_block_count = 0; y_block_count < TEMPLATE_Y_SIZE; y_block += y_block_size, y_block_count++)
+    for (int y_block = Y_RANGE_MIN, y_block_count = 0; y_block_count < TEMPLATE_Y_SIZE;
+         y_block += y_block_size, y_block_count++)
     {
-      for (int x_block = X_RANGE_MIN, x_block_count = 0; x_block_count < TEMPLATE_X_SIZE; x_block += x_block_size, x_block_count++)
+      for (int x_block = X_RANGE_MIN, x_block_count = 0; x_block_count < TEMPLATE_X_SIZE;
+           x_block += x_block_size, x_block_count++)
       {
         for (int x = x_block; x < (x_block + x_block_size); x++)
         {
           for (int y = y_block; y < (y_block + y_block_size); y++)
           {
             pos = (x + y * IMAGE_WIDTH) * 3;
-            current_view[data_next] += ((double)(view_rgb[pos]) + (double)(view_rgb[pos + 1]) + (double)(view_rgb[pos + 2]));
+            current_view[data_next] +=
+                ((double)(view_rgb[pos]) + (double)(view_rgb[pos + 1]) + (double)(view_rgb[pos + 2]));
           }
         }
         current_view[data_next] /= (255.0 * 3.0);
@@ -208,9 +215,6 @@ void VisualOdometry::convert_view_to_view_template(double *current_view, const u
       }
     }
   }
-
 }
-
-}
-;
+};
 // namespace ratslam

@@ -1,43 +1,56 @@
 <package>
   <name>ratslam_ros</name>
-  <version>0.0.1</version>
+  <version>1.0.0</version>
   <description>ratslam_ros</description>
 
-  <author>scott</author>
+  <author>Michael Milford</author>
+  <author>Gordon Wyeth</author>
+  <author email="davidmichaelball@gmail.com">David Ball</author>
+  <author>Scott Heath</author>
+
   <maintainer email="davidmichaelball@gmail.com">David Ball</maintainer>
+  <maintainer email="semael23@gmail.com">Peter Rudolph</maintainer>
 
   <license>BSD</license>
   <url>http://ros.org/wiki/ratslam</url>
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>libirrlicht-dev</build_depend>
+  <build_depend>opengl</build_depend>
+  <build_depend>cv_bridge</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>nav_msgs</build_depend>
-  <build_depend>opencv2</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>visualization_msgs</build_depend>
   <build_depend>image_transport</build_depend>
+  <build_depend>compressed_image_transport</build_depend>
   <build_depend>nav_msgs</build_depend>
   <build_depend>boost</build_depend>
   <build_depend>message_generation</build_depend>
   <build_depend>message_runtime</build_depend>
+  <build_depend>wget</build_depend>
 
+  <run_depend>libirrlicht-dev</run_depend>
+  <run_depend>opengl</run_depend>
+  <run_depend>cv_bridge</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>nav_msgs</run_depend>
-  <run_depend>opencv2</run_depend>
   <run_depend>tf</run_depend>
   <run_depend>visualization_msgs</run_depend>
   <run_depend>image_transport</run_depend>
+  <run_depend>compressed_image_transport</run_depend>
   <run_depend>nav_msgs</run_depend>
   <run_depend>boost</run_depend>
   <run_depend>message_generation</run_depend>
   <run_depend>message_runtime</run_depend>
+  <run_depend>wget</run_depend>
 
 </package>
 

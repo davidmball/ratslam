@@ -3,18 +3,27 @@ project(ratslam_ros)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
+# Enable Cxx11 support
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+if(COMPILER_SUPPORTS_CXX11)
+  set(CMAKE_CXX_FLAGS "-std=c++11")
+elseif(COMPILER_SUPPORTS_CXX0X)
+  set(CMAKE_CXX_FLAGS "-std=c++0x")
+else()
+  message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+endif()
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS message_generation std_msgs roscpp sensor_msgs nav_msgs tf visualization_msgs image_transport nav_msgs) ## actionlib_msgs)
 
-find_package(OpenCV)
-include_directories(${OpenCV_INCLUDE_DIRS})
+find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED COMPONENTS serialization)
 find_package(Irrlicht REQUIRED)
 find_package(OpenGL REQUIRED)
-
 
 ## Generate messages in the 'msg' folder
 add_message_files(
@@ -58,45 +67,53 @@ CATKIN_DEPENDS message_runtime geometry_msgs std_msgs
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
+  src
+  ${OpenCV_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
 )
 
 #ratslam library
 add_library(ratslam src/ratslam/experience_map.cpp src/ratslam/posecell_network.cpp src/ratslam/local_view_match.cpp src/ratslam/visual_odometry.cpp)
 
+target_link_libraries(ratslam
+  ${Boost_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+)
 
-# uncomment is you don't have irrlicht installed
+# comment this out, if you don't have irrlicht installed
 add_definitions("-DHAVE_IRRLICHT")
 
 add_executable(ratslam_lv src/main_lv.cpp)
-target_link_libraries(ratslam_lv 
-  ${catkin_LIBRARIES}
+target_link_libraries(ratslam_lv
   ratslam
   ${IRRLICHT_LIBRARIES}
   ${OPENGL_LIBRARIES}
-  ${OpenCV_LIBRARIES})
+  ${catkin_LIBRARIES}
+)
 
 add_executable(ratslam_pc src/main_pc.cpp)
 target_link_libraries(ratslam_pc
-  ${catkin_LIBRARIES} 
-  ratslam
-  ${IRRLICHT_LIBRARIES}
-  ${OPENGL_LIBRARIES})
-
-add_executable(ratslam_em src/main_em.cpp)
-target_link_libraries(ratslam_em
-  ${catkin_LIBRARIES}
-  ratslam
-  ${IRRLICHT_LIBRARIES}
-  ${OPENGL_LIBRARIES})
-
-add_executable(ratslam_vo src/main_vo.cpp)
-target_link_libraries(ratslam_vo
-  ${catkin_LIBRARIES}
   ratslam
   ${IRRLICHT_LIBRARIES}
   ${OPENGL_LIBRARIES}
-  ${OpenCV_LIBRARIES})
+  ${catkin_LIBRARIES}
+)
+
+add_executable(ratslam_em src/main_em.cpp)
+target_link_libraries(ratslam_em
+  ratslam
+  ${IRRLICHT_LIBRARIES}
+  ${OPENGL_LIBRARIES}
+  ${catkin_LIBRARIES}
+)
+
+add_executable(ratslam_vo src/main_vo.cpp)
+target_link_libraries(ratslam_vo
+  ratslam
+  ${IRRLICHT_LIBRARIES}
+  ${OPENGL_LIBRARIES}
+  ${catkin_LIBRARIES}
+)
 
 #config files for devel
 set(MEDIA_PATH ${CMAKE_CURRENT_SOURCE_DIR}/src/media) #devel use the files in the source dir
@@ -145,3 +162,22 @@ install(DIRECTORY src/media/
 
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/config/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config)
+
+if (CATKIN_ENABLE_TESTING)
+
+## setup test data download target
+add_custom_target(
+  irat_aus_test.bag
+  COMMAND if [ ! -e ./tests ]\; then mkdir tests\; fi
+  COMMAND if [ ! -e ./tests/irat_aus_test.bag ]\; then wget https://www.dropbox.com/s/ukiob6h0reavhem/irat_aus_test.bag?dl=0 -O tests/irat_aus_test.bag\; fi
+  WORKING_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+## add download target to test target dependencies
+add_dependencies(tests irat_aus_test.bag)
+
+## add rostests
+find_package(rostest REQUIRED)
+add_rostest(tests/irat_aus.test)
+
+endif()

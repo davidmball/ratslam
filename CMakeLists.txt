@@ -15,6 +15,7 @@ find_package(Boost REQUIRED COMPONENTS serialization)
 find_package(Irrlicht REQUIRED)
 find_package(OpenGL REQUIRED)
 
+message(${OpenCV_LIBRARIES})
 
 ## Generate messages in the 'msg' folder
 add_message_files(
@@ -81,14 +82,16 @@ target_link_libraries(ratslam_pc
   ${catkin_LIBRARIES} 
   ratslam
   ${IRRLICHT_LIBRARIES}
-  ${OPENGL_LIBRARIES})
+  ${OPENGL_LIBRARIES}
+  ${OpenCV_LIBRARIES})
 
 add_executable(ratslam_em src/main_em.cpp)
 target_link_libraries(ratslam_em
   ${catkin_LIBRARIES}
   ratslam
   ${IRRLICHT_LIBRARIES}
-  ${OPENGL_LIBRARIES})
+  ${OPENGL_LIBRARIES}
+  ${OpenCV_LIBRARIES})
 
 add_executable(ratslam_vo src/main_vo.cpp)
 target_link_libraries(ratslam_vo

@@ -13,7 +13,7 @@ opencv2 and topological\_nav\_msgs
 and also on 3D graphics library [Irrlicht](http://irrlicht.sourceforge.net)
 Irrlicht can be installed on Ubuntu with apt-get
 ```
-sudo apt-get install libirrlicht-dev
+sudo apt-get install libirrlicht-dev libopencv-dev ros-melodic-tf ros-melodic-image-transport
 ```
 OpenRatSLAM currently depends on Ubuntu's OpenCV package. It can also be installed with apt-get
 ```

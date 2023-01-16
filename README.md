@@ -1,5 +1,3 @@
-<img src='https://wiki.qut.edu.au/download/attachments/104094381/logo_sml.jpg?version=1&modificationDate=1338441816000'>
-
 <b>RatSLAM</b> is a bio-inspired simultaneous localisation and mapping (SLAM) system. Based on continous attractor network dynamics, RatSLAM is capable of mapping by closing loops to correct odometry error.<br>
 <br>
 The original RatSLAM algorithm was designed and implemented on Pioneer robots by Michael Milford and Gordon Wyeth (see <a href='http://eprints.qut.edu.au/37593/1/c37593.pdf'>RatSLAM: a hippocampal model for simultaneous localization and mapping</a>).<br>

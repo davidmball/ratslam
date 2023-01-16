@@ -12,9 +12,9 @@ There are now two versions of RatSLAM available, both based on the same code:<br
 <ul><li><b>(NEW)</b> <a href='https://github.com/davidmball/ratslam/blob/wiki/RatSLAMROS.md'>A ROS-based version</a>
 </li><li><a href='https://github.com/davidmball/ratslam/blob/wiki/RatSLAMLibrary.md'>A C++ library</a></li></ul>
 
-We provide three datasets for the ROS version of openRatSLAM available at <a href='https://wiki.qut.edu.au/display/cyphy/openRatSLAM+datasets'>QUT cyphy</a> for:<br>
-<ul><li>iRat in an Australian set (2011)<br>
-</li><li>Car in St Lucia suburb (2007)<br>
-</li><li>Oxford's New College (2008)</li></ul>
+We provide three datasets for the ROS version of openRatSLAM
+<ul><li><a href='https://mega.nz/file/FAlXyZbB#6rMpQ6EE4LQIKmZvy5zN7Stdu4pIzZm2h3TnHkG2wms'>iRat in an Australian set (2011)</a><br>
+</li><li><a href='https://mega.nz/file/od8xVbKJ#E81hKj-M1-CybBkX1dLe3htAJw-gP9MAQIEeZkPwuUY'>Car in St Lucia suburb (2007)</a><br>
+</li><li><a href='https://mega.nz/file/oJdwxTAJ#EB-M_gLWq8Sy2uFvmER-D_uTZ7_Rd4v-5ZUhu1YGNCQ'>Oxford's New College (2008)</a></li></ul>
 
 The code is released under the GNU GPL V3. Please contact David Ball if you require a more permissive license.
